@@ -17,15 +17,18 @@ LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-	const int window_width = 1280;
-	const int window_height = 720;
+	//ウィンドウサイズ
+	const int window_width = 1280;	//横幅
+	const int window_height = 720;	//縦幅
 
+	//ウィンドウクラスの設定
 	WNDCLASSEX w{};
 	w.cbSize = sizeof(WNDCLASSEX);
 	w.lpfnWndProc = (WNDPROC)WindowProc;	//ウィンドウプロシージャを設定
 	w.lpszClassName = L"DirectXGame";	//ウィンドウクラス名
 	w.hInstance = GetModuleHandle(nullptr); // ウィンドウハンドル
 	w.hCursor = LoadCursor(NULL, IDC_ARROW); // カーソル指定
+
 	// ウィンドウクラスをOSに登録する
 	RegisterClassEx(&w);
 	// ウィンドウサイズ{ X座標 Y座標 横幅 縦幅 }
@@ -45,7 +48,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		nullptr, // メニューハンドル
 		w.hInstance, // 呼び出しアプリケーションハンドル
 		nullptr); // オプション
-		// ウィンドウを表示状態にする
+
+	// ウィンドウを表示状態にする
 	ShowWindow(hwnd, SW_SHOW);
 	
 	MSG msg{}; // メッセージ
