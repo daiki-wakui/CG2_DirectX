@@ -243,9 +243,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// 4.描画コマンド　ここから
 		// 頂点データ
 		XMFLOAT3 vertices[] = {
-		{ -0.5f, -0.5f, 0.0f }, // 左下
-		{ -0.5f, +0.5f, 0.0f }, // 左上
-		{ +0.5f, -0.5f, 0.0f }, // 右下
+			{ -0.5f, -0.5f, 0.0f }, // 左下
+			{ -0.5f, +0.5f, 0.0f }, // 左上
+			{ +0.5f, -0.5f, 0.0f }, // 右下
 		};
 		// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
 		UINT sizeVB = static_cast<UINT>(sizeof(XMFLOAT3) * _countof(vertices));
@@ -347,11 +347,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// 頂点レイアウト
 		D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-		{
-		"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
-		D3D12_APPEND_ALIGNED_ELEMENT,
-		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
-		}, // (1行で書いたほうが見やすい)
+			{
+				"POSITION",						//セマンティック名
+				0,								//同じセマンティック名が複数あるときに使うインデックス(0でよい)
+				DXGI_FORMAT_R32G32B32_FLOAT,	//要素数とビット数を表す(XYZの3つでfloat型なのでR32G32B32_FLOAT)
+				0,								//入力スロットインデックス
+				D3D12_APPEND_ALIGNED_ELEMENT,	//データのオフセット値(D3D12_APPEND_ALIGNED_ELEMENだと自動設定)
+				D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,	//入力データ種別(標準はD3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA)
+				0								//一度に描画するインスタンス数(0でよい)
+			}, 
 		};
 
 		// グラフィックスパイプライン設定
