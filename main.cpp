@@ -11,6 +11,12 @@ using namespace DirectX;
 #include <d3dcompiler.h>
 #pragma comment(lib, "d3dcompiler.lib")
 
+#define DIRECTINPUT_VERSION	0x0800
+#include <dinput.h>
+
+#pragma comment(lib,"dinput8.lib")
+#pragma comment(lib,"dxguid.lib")
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
@@ -205,6 +211,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12Fence* fence = nullptr;
 	UINT64 fenceVal = 0;
 	result = device->CreateFence(fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+
+	//DirectInputの初期化
+	IDirectInput8* directInput = nullptr;
+	result = DirectInput8Create(
+		w.hInstance,
+		DIRECTINPUT_VERSION,
+		IID_IDirectInput8,
+	(void**)&directInput, nullptr);
+	assert(SUCCEEDED(result));
+
+	//キーボードデバイスの生成
+	IDirectInputDevice8* keyborad = nullptr;
+	result = directInput->CreateDevice(GUID_SysKeyboard, &keyborad, NULL);
+	assert(SUCCEEDED(result));
+
+	//入力データ形式のセット
+	result = keyborad->SetDataFormat(&c_dfDIKeyboard);	//標準形式
+	assert(SUCCEEDED(result));
+
+	//排他制御レベルのセット
+	result = keyborad->SetCooperativeLevel(
+		hwnd,
+		DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+	assert(SUCCEEDED(result));
+
 	//DirectX初期化処理　ここまで
 
 	while (true) {
@@ -219,6 +250,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 
 		// DirectX毎フレーム処理 ここから
+
+		//キーボード情報の取得開始
+		keyborad->Acquire();
+
+		//全キーの入力状態を取得する
+		BYTE key[256] = {};
+		keyborad->GetDeviceState(sizeof(key), key);
+
+		//数字の0キーが
+		if (key[DIK_0]) {
+			OutputDebugStringA("Hit 0\n");
+		}
 
 		// バックバッファの番号を取得(2つなので0番か1番)
 		UINT bbIndex = swapChain->GetCurrentBackBufferIndex();
@@ -241,6 +284,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
 		// 4.描画コマンド　ここから
+		
+		if (key[DIK_SPACE]) {
+			FLOAT clearColor[] = { 0.75f,0.1f, 0.1f,0.0f };
+			commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+		}
+
 		// 頂点データ
 		XMFLOAT3 vertices[] = {
 			{ -0.5f, -0.5f, 0.0f }, // 左下
