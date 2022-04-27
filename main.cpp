@@ -464,9 +464,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// ビューポート設定コマンド
 		D3D12_VIEWPORT viewport{};
-		viewport.Width = window_width/2;	//横幅
+		viewport.Width = window_width;	//横幅
 		viewport.Height = window_height;	//縦幅
-		viewport.TopLeftX = window_width / 2;	//左上X
+		viewport.TopLeftX = 0;	//左上X
 		viewport.TopLeftY = 0;	//左上Y
 		viewport.MinDepth = 0.0f;	//最小深度
 		viewport.MaxDepth = 1.0f;	//最大深度
@@ -475,7 +475,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// シザー矩形の設定コマンド
 		D3D12_RECT scissorRect{};
-		scissorRect.left = window_width / 2 + window_width / 4; // 切り抜き座標左
+		scissorRect.left = 0; // 切り抜き座標左
 		scissorRect.right = scissorRect.left + window_width; // 切り抜き座標右
 		scissorRect.top = 0; // 切り抜き座標上
 		scissorRect.bottom = scissorRect.top + window_height; // 切り抜き座標下
