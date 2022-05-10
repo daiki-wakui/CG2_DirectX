@@ -20,6 +20,11 @@ using namespace DirectX;
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
+bool keyPush(uint8_t keyNum);
+bool keyRelease(uint8_t keyNum);
+bool keyInstantPush(uint8_t keyNum, uint8_t oldkeyNum);
+bool keyInstantRelease(uint8_t keyNum, uint8_t oldkeyNum);
+
 //ウィンドウプロシージャ
 LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	//メッセージに応じてゲーム固有の処理を行う
@@ -285,8 +290,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// 4.描画コマンド　ここから
 		
-		if (key[DIK_SPACE]) {
-			FLOAT clearColor[] = { 0.75f,0.1f, 0.1f,0.0f };
+		if (keyPush(key[DIK_SPACE]) == true) {
+			FLOAT clearColor[] = { 1.0f,0.25f, 0.75f,0.0f };
 			commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		}
 
@@ -620,3 +625,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	return 0;
 }
+
+bool keyPush(uint8_t keyNum) {
+	return keyNum;
+};
+
+bool keyRelease(uint8_t keyNum) {
+	return !keyNum;
+};
+
+bool keyInstantPush(uint8_t keyNum, uint8_t oldkeyNum) {
+	return keyNum && !oldkeyNum;
+};
+
+bool keyInstantRelease(uint8_t keyNum, uint8_t oldkeyNum) {
+	return !keyNum && oldkeyNum;
+};
