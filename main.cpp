@@ -243,6 +243,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//DirectX初期化処理　ここまで
 
+	int Mode = 0;
+	int frameMode = 0;
+
+	//ゲームループ
 	while (true) {
 		// メッセージがある?
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -260,12 +264,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		keyborad->Acquire();
 
 		//全キーの入力状態を取得する
+		BYTE oldkey[256] = {};
 		BYTE key[256] = {};
+
+		for (int i = 0; i < 256; ++i)
+		{
+			oldkey[i] = key[i];
+		}
 		keyborad->GetDeviceState(sizeof(key), key);
 
-		//数字の0キーが
-		if (key[DIK_0]) {
-			OutputDebugStringA("Hit 0\n");
+		//1を押しとき三角と四角を入れ替える
+		if (keyInstantPush(key[DIK_1], oldkey[DIK_1] == true)) {
+			if (Mode == 0) {
+				Mode = 1;
+			}
+			else {
+				Mode - 0;
+			}
 		}
 
 		// バックバッファの番号を取得(2つなので0番か1番)
@@ -296,11 +311,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 
 		// 頂点データ
+
 		XMFLOAT3 vertices[] = {
 			{ -0.5f, -0.5f, 0.0f }, // 左下
 			{ -0.5f, +0.5f, 0.0f }, // 左上
 			{ +0.5f, -0.5f, 0.0f }, // 右下
+			{ +0.5f, +0.5f, 0.0f }, // 右上
 		};
+
+
 		// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
 		UINT sizeVB = static_cast<UINT>(sizeof(XMFLOAT3) * _countof(vertices));
 
@@ -438,7 +457,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		pipelineDesc.InputLayout.NumElements = _countof(inputLayout);
 
 		// 図形の形状設定
-		pipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		
+		if (Mode == 1) {
+			pipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+		}
+		else {
+			pipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+		}
+		
 
 		// その他の設定
 		pipelineDesc.NumRenderTargets = 1; // 描画対象は1つ
