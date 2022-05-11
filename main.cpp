@@ -20,6 +20,11 @@ using namespace DirectX;
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 
+bool keyPush(uint8_t keyNum);
+bool keyRelease(uint8_t keyNum);
+bool keyInstantPush(uint8_t keyNum, uint8_t oldkeyNum);
+bool keyInstantRelease(uint8_t keyNum, uint8_t oldkeyNum);
+
 //ウィンドウプロシージャ
 LRESULT WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 	//メッセージに応じてゲーム固有の処理を行う
@@ -218,7 +223,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		w.hInstance,
 		DIRECTINPUT_VERSION,
 		IID_IDirectInput8,
-	(void**)&directInput, nullptr);
+		(void**)&directInput, nullptr);
 	assert(SUCCEEDED(result));
 
 	//キーボードデバイスの生成
@@ -284,9 +289,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
 		// 4.描画コマンド　ここから
-		
-		if (key[DIK_SPACE]) {
-			FLOAT clearColor[] = { 0.75f,0.1f, 0.1f,0.0f };
+
+		if (keyPush(key[DIK_SPACE]) == true) {
+			FLOAT clearColor[] = { 1.0f,0.25f, 0.75f,0.0f };
 			commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		}
 
@@ -404,7 +409,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				D3D12_APPEND_ALIGNED_ELEMENT,	//データのオフセット値(D3D12_APPEND_ALIGNED_ELEMENだと自動設定)
 				D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,	//入力データ種別(標準はD3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA)
 				0								//一度に描画するインスタンス数(0でよい)
-			}, 
+			},
 		};
 
 		// グラフィックスパイプライン設定
@@ -464,9 +469,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// ビューポート設定コマンド
 		D3D12_VIEWPORT viewport{};
-		viewport.Width = window_width/2;	//横幅
-		viewport.Height = window_height;	//縦幅
-		viewport.TopLeftX = window_width / 2;	//左上X
+		viewport.Width = window_width / 3 * 2;	//横幅
+		viewport.Height = window_height / 3 * 2;	//縦幅
+		viewport.TopLeftX = 0;	//左上X
 		viewport.TopLeftY = 0;	//左上Y
 		viewport.MinDepth = 0.0f;	//最小深度
 		viewport.MaxDepth = 1.0f;	//最大深度
@@ -475,10 +480,93 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// シザー矩形の設定コマンド
 		D3D12_RECT scissorRect{};
-		scissorRect.left = window_width / 2 + window_width / 4; // 切り抜き座標左
+		scissorRect.left = 0; // 切り抜き座標左
 		scissorRect.right = scissorRect.left + window_width; // 切り抜き座標右
 		scissorRect.top = 0; // 切り抜き座標上
 		scissorRect.bottom = scissorRect.top + window_height; // 切り抜き座標下
+
+
+		// シザー矩形設定コマンドを、コマンドリストに追加する
+		commandList->RSSetScissorRects(1, &scissorRect);
+
+		// パイプラインステートとルートシグネチャの設定コマンド
+		commandList->SetPipelineState(pipelineState);
+		commandList->SetGraphicsRootSignature(rootSignature);
+
+		// プリミティブ形状の設定コマンド
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
+
+		// 頂点バッファビューの設定コマンド
+		commandList->IASetVertexBuffers(0, 1, &vbView);
+
+		// 描画コマンド
+		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+
+		// ビューポート設定コマンド
+		D3D12_VIEWPORT viewport2{};
+		viewport2.Width = window_width / 3 * 2;	//横幅
+		viewport2.Height = window_height / 3;	//縦幅
+		viewport2.TopLeftX = 0;	//左上X
+		viewport2.TopLeftY = window_height / 3 * 2;	//左上Y
+		viewport2.MinDepth = 0.0f;	//最小深度
+		viewport2.MaxDepth = 1.0f;	//最大深度
+		// ビューポート設定コマンドを、コマンドリストに追加する
+		commandList->RSSetViewports(1, &viewport2);
+
+		// シザー矩形設定コマンドを、コマンドリストに追加する
+		commandList->RSSetScissorRects(1, &scissorRect);
+
+		// パイプラインステートとルートシグネチャの設定コマンド
+		commandList->SetPipelineState(pipelineState);
+		commandList->SetGraphicsRootSignature(rootSignature);
+
+		// プリミティブ形状の設定コマンド
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
+
+		// 頂点バッファビューの設定コマンド
+		commandList->IASetVertexBuffers(0, 1, &vbView);
+
+		// 描画コマンド
+		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+
+		// ビューポート設定コマンド
+		D3D12_VIEWPORT viewport3{};
+		viewport3.Width = window_width / 3;	//横幅
+		viewport3.Height = window_height / 3 * 2;	//縦幅
+		viewport3.TopLeftX = window_width / 3 * 2;	//左上X
+		viewport3.TopLeftY = 0;	//左上Y
+		viewport3.MinDepth = 0.0f;	//最小深度
+		viewport3.MaxDepth = 1.0f;	//最大深度
+		// ビューポート設定コマンドを、コマンドリストに追加する
+		commandList->RSSetViewports(1, &viewport3);
+
+		// シザー矩形設定コマンドを、コマンドリストに追加する
+		commandList->RSSetScissorRects(1, &scissorRect);
+
+		// パイプラインステートとルートシグネチャの設定コマンド
+		commandList->SetPipelineState(pipelineState);
+		commandList->SetGraphicsRootSignature(rootSignature);
+
+		// プリミティブ形状の設定コマンド
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
+
+		// 頂点バッファビューの設定コマンド
+		commandList->IASetVertexBuffers(0, 1, &vbView);
+
+		// 描画コマンド
+		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+
+		// ビューポート設定コマンド
+		D3D12_VIEWPORT viewport4{};
+		viewport4.Width = window_width / 3;	//横幅
+		viewport4.Height = window_height / 3;	//縦幅
+		viewport4.TopLeftX = window_width / 3 * 2;	//左上X
+		viewport4.TopLeftY = window_height / 3 * 2;	//左上Y
+		viewport4.MinDepth = 0.0f;	//最小深度
+		viewport4.MaxDepth = 1.0f;	//最大深度
+		// ビューポート設定コマンドを、コマンドリストに追加する
+		commandList->RSSetViewports(1, &viewport4);
+
 		// シザー矩形設定コマンドを、コマンドリストに追加する
 		commandList->RSSetScissorRects(1, &scissorRect);
 
@@ -537,3 +625,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	return 0;
 }
+
+bool keyPush(uint8_t keyNum) {
+	return keyNum;
+};
+
+bool keyRelease(uint8_t keyNum) {
+	return !keyNum;
+};
+
+bool keyInstantPush(uint8_t keyNum, uint8_t oldkeyNum) {
+	return keyNum && !oldkeyNum;
+};
+
+bool keyInstantRelease(uint8_t keyNum, uint8_t oldkeyNum) {
+	return !keyNum && oldkeyNum;
+};
