@@ -272,12 +272,27 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		keyborad->GetDeviceState(sizeof(key), key);
 
+		//押した瞬間に図形変化
 		if (keyInstantPush(key[DIK_1], oldkey[DIK_1]) == true) {
+			//三角形から四角形にする
 			if (imageMode == 0) {
 				imageMode = 1;
 			}
+			//四角形から三角形にする
 			else {
 				imageMode = 0;
+			}
+		}
+
+		//押した瞬間にワイヤーフレームと塗りつぶし切り替え
+		if (keyInstantPush(key[DIK_2], oldkey[DIK_2]) == true) {
+			//塗りつぶしからワイヤーフレームにする
+			if (frameMode == 0) {
+				frameMode = 1;
+			}
+			//ワイヤーフレームから塗りつぶしにする
+			else {
+				frameMode = 0;
 			}
 		}
 
@@ -323,7 +338,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			{ 0.0f, 0.0f, 0.0f }, // 右上
 		};
 
-
+		//四角形なら頂点を変更
 		if (imageMode == 1) {
 			vertices[3] = { +0.5f,-0.5f,0.0f };
 			vertices[4] = { -0.5f,+0.5f,0.0f };
@@ -460,7 +475,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// ラスタライザの設定
 		pipelineDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE; // カリングしない
-		pipelineDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID; // ポリゴン内塗りつぶし
+
+		if (frameMode == 0) {
+			pipelineDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID; // ポリゴン内塗りつぶし
+		}
+		else {
+			pipelineDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;	//ワイヤーフレーム
+		}
+
 		pipelineDesc.RasterizerState.DepthClipEnable = true; // 深度クリッピングを有効に
 
 		// ブレンドステート
