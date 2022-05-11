@@ -4,7 +4,6 @@
 #include <cassert>
 #include <vector>
 #include <string>
-#include "GameScene.h"
 
 #include <DirectXMath.h>
 using namespace DirectX;
