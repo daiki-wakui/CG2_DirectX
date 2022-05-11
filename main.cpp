@@ -244,11 +244,55 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//DirectX初期化処理　ここまで
 
 	//描画初期化処理
-	// 
+	
 	//定数バッファ用データ構造体(マテリアル)
 	struct ConstBufferDataMaterial {
 		XMFLOAT4 color;	//色(RGBA)
 	};
+
+	//インデックスデータ(03_04)
+	uint16_t indices[] = {
+		0,1,2,
+		1,2,3,
+	};
+
+	//インデックスデータ全体のサイズ
+	UINT sizeIB = static_cast<UINT>(sizeof(uint16_t) * _countof(indices));
+
+	// 頂点バッファの設定
+	D3D12_HEAP_PROPERTIES heapProp{}; // ヒープ設定
+	heapProp.Type = D3D12_HEAP_TYPE_UPLOAD; // GPUへの転送用
+	
+	// リソース設定
+	D3D12_RESOURCE_DESC resDesc{};
+	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resDesc.Width = sizeIB; //インデックスに入る分のサイズ
+	resDesc.Height = 1;
+	resDesc.DepthOrArraySize = 1;
+	resDesc.MipLevels = 1;
+	resDesc.SampleDesc.Count = 1;
+	resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	//インデックスバッファの生成
+	ID3D12Resource* indexBuff = nullptr;
+	result = device->CreateCommittedResource(
+		&heapProp, // ヒープ設定
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc, // リソース設定
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&indexBuff));
+
+	// GPU上のバッファに対応した仮想メモリ(メインメモリ上)を取得
+	XMFLOAT3* indexMap = nullptr;
+	result = indexBuff->Map(0, nullptr, (void**)&indexMap);
+	assert(SUCCEEDED(result));
+	// 全頂点に対して
+	for (int i = 0; i < _countof(indices); i++) {
+		indexMap[i] = indices[i]; // 座標をコピー
+	}
+	// 繋がりを解除
+	indexBuff->Unmap(0, nullptr);
 
 	//ヒープ設定
 	D3D12_HEAP_PROPERTIES cbHeapProp{};
@@ -340,11 +384,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		XMFLOAT3 vertices[] = {
 			{ -0.5f, -0.5f, 0.0f }, // 左下
 			{ +0.5f, -0.5f, 0.0f }, // 右下
-			{ -0.5f, 0.0f, 0.0f }, // 左中
-			{ +0.5f, 0.0f, 0.0f }, // 右中
 			{ -0.5f, +0.5f, 0.0f }, // 左上
-			{ +0.5f, +0.5f, 0.0f }, // 右上
 		};
+
 		// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
 		UINT sizeVB = static_cast<UINT>(sizeof(XMFLOAT3) * _countof(vertices));
 
