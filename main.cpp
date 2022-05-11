@@ -332,6 +332,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// 4.描画コマンド　ここから
 		
+		//色の変化
+		constMapMaterial->color.x -= 0.01f;
+		constMapMaterial->color.y += 0.01f;
+		
+
 		if (key[DIK_SPACE]) {
 			FLOAT clearColor[] = { 0.75f,0.1f, 0.1f,0.0f };
 			commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
@@ -576,6 +581,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		commandList->IASetVertexBuffers(0, 1, &vbView);
 
 		//定数バッファビュー(CBV)の設定コマンド(03_02)
+		//(0)は配列番号のゼロ
 		commandList->SetGraphicsRootConstantBufferView(0, constBuffMaterial->GetGPUVirtualAddress());
 
 		// 描画コマンド
