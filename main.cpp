@@ -316,8 +316,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			{ -0.5f, -0.5f, 0.0f }, // 左下
 			{ -0.5f, +0.5f, 0.0f }, // 左上
 			{ +0.5f, -0.5f, 0.0f }, // 右下
-			{ +0.5f, +0.5f, 0.0f }, // 右上
+			{ 0.0f, 0.0f, 0.0f }, // 右上
 		};
+
+		if (Mode == 1) {
+			vertices[3] = { +0.5f,+0.5f,0.0f };
+		}
+		else {
+			vertices[3] = { 0.0f,0.0f,0.0f };
+		}
 
 
 		// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
@@ -457,14 +464,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		pipelineDesc.InputLayout.NumElements = _countof(inputLayout);
 
 		// 図形の形状設定
-		
-		if (Mode == 1) {
-			pipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
-		}
-		else {
-			pipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-		}
-		
+		pipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 
 		// その他の設定
 		pipelineDesc.NumRenderTargets = 1; // 描画対象は1つ
