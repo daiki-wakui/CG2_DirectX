@@ -46,6 +46,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	const int window_width = 1280;	//横幅
 	const int window_height = 720;	//縦幅
 
+	//ウィンドウ状態
+	int windowState=0;
+
 	//ウィンドウクラスの設定
 	WNDCLASSEX w{};
 	w.cbSize = sizeof(WNDCLASSEX);
@@ -240,15 +243,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		hwnd,
 		DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
 	assert(SUCCEEDED(result));
+
 	BYTE key[256] = {};
 	BYTE oldkey[256] = {};
 
 	//DirectX初期化処理　ここまで
 
-	int Mode = 0;
-	int frameMode = 0;
-
-	//ゲームループ
 	while (true) {
 		// メッセージがある?
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -266,20 +266,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		keyborad->Acquire();
 
 		//全キーの入力状態を取得する
-		
-
 		for (int i = 0; i < 256; i++) {
 			oldkey[i] = key[i];
 		}
+		
 		keyborad->GetDeviceState(sizeof(key), key);
 
-		//1を押しとき三角と四角を入れ替える
-		if (keyInstantPush(key[DIK_1], oldkey[DIK_1] == true)) {
-			if (Mode == 0) {
-				Mode = 1;
+		//数字の0キーが
+		if (key[DIK_0]) {
+			OutputDebugStringA("Hit 0\n");
+		}
+
+		if (keyInstantPush(key[DIK_1], oldkey[DIK_1]) == true) {
+			if (windowState == 0) {
+				windowState = 1;
 			}
 			else {
-				Mode = 0;
+				windowState - 0;
 			}
 		}
 
@@ -304,35 +307,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
 		// 4.描画コマンド　ここから
-		
 		if (keyPush(key[DIK_SPACE]) == true) {
 			FLOAT clearColor[] = { 1.0f,0.25f, 0.75f,0.0f };
 			commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		}
 
-		// 頂点データ
+	
 
+		// 頂点データ
 		XMFLOAT3 vertices[] = {
 			{ -0.5f, -0.5f, 0.0f }, // 左下
 			{ -0.5f, +0.5f, 0.0f }, // 左上
 			{ +0.5f, -0.5f, 0.0f }, // 右下
-			{ 0.0f, 0.0f, 0.0f }, // 右下
-			{ 0.0f, 0.0f, 0.0f }, // 左上
-			{ 0.0f, 0.0f, 0.0f }, // 右上
 		};
-
-		if (Mode == 1) {
-			vertices[3] = { +0.5f,-0.5f,0.0f };
-			vertices[4] = { -0.5f,+0.5f,0.0f };
-			vertices[5] = { +0.5f,+0.5f,0.0f };
-		}
-		else {
-			vertices[3] = { 0.0f,0.0f,0.0f };
-			vertices[4] = { 0.0f,0.0f,0.0f };
-			vertices[5] = { 0.0f,0.0f,0.0f };
-		}
-
-
 		// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
 		UINT sizeVB = static_cast<UINT>(sizeof(XMFLOAT3) * _countof(vertices));
 
@@ -383,6 +370,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ID3DBlob* vsBlob = nullptr; // 頂点シェーダオブジェクト
 		ID3DBlob* psBlob = nullptr; // ピクセルシェーダオブジェクト
 		ID3DBlob* errorBlob = nullptr; // エラーオブジェクト
+
 		// 頂点シェーダの読み込みとコンパイル
 		result = D3DCompileFromFile(
 			L"BasicVS.hlsl", // シェーダファイル名
@@ -472,6 +460,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// 図形の形状設定
 		pipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 
+		pipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+
 		// その他の設定
 		pipelineDesc.NumRenderTargets = 1; // 描画対象は1つ
 		pipelineDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 0~255指定のRGBA
@@ -501,8 +491,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// ビューポート設定コマンド
 		D3D12_VIEWPORT viewport{};
-		viewport.Width = window_width / 3 * 2;	//横幅
-		viewport.Height = window_height / 3 * 2;	//縦幅
+		viewport.Width = window_width / 3*2;	//横幅
+		viewport.Height = window_height / 3*2;	//縦幅
 		viewport.TopLeftX = 0;	//左上X
 		viewport.TopLeftY = 0;	//左上Y
 		viewport.MinDepth = 0.0f;	//最小深度
@@ -564,7 +554,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// ビューポート設定コマンド
 		D3D12_VIEWPORT viewport3{};
 		viewport3.Width = window_width / 3;	//横幅
-		viewport3.Height = window_height / 3 * 2;	//縦幅
+		viewport3.Height = window_height / 3*2;	//縦幅
 		viewport3.TopLeftX = window_width / 3 * 2;	//左上X
 		viewport3.TopLeftY = 0;	//左上Y
 		viewport3.MinDepth = 0.0f;	//最小深度
@@ -592,8 +582,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		D3D12_VIEWPORT viewport4{};
 		viewport4.Width = window_width / 3;	//横幅
 		viewport4.Height = window_height / 3;	//縦幅
-		viewport4.TopLeftX = window_width / 3 * 2;	//左上X
-		viewport4.TopLeftY = window_height / 3 * 2;	//左上Y
+		viewport4.TopLeftX = window_width / 3*2;	//左上X
+		viewport4.TopLeftY = window_height / 3*2;	//左上Y
 		viewport4.MinDepth = 0.0f;	//最小深度
 		viewport4.MaxDepth = 1.0f;	//最大深度
 		// ビューポート設定コマンドを、コマンドリストに追加する
@@ -614,6 +604,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// 描画コマンド
 		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+
 		// 4.描画コマンド　ここまで
 
 		// 5.リソースバリアを戻す
@@ -645,7 +636,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// 再びコマンドリストを貯める準備
 		result = commandList->Reset(commandAllocator, nullptr);
 		assert(SUCCEEDED(result));
-
 		// DirectX毎フレーム処理 ここまで
 	}
 
