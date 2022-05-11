@@ -240,6 +240,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		hwnd,
 		DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
 	assert(SUCCEEDED(result));
+	BYTE key[256] = {};
+	BYTE oldkey[256] = {};
 
 	//DirectX初期化処理　ここまで
 
@@ -264,11 +266,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		keyborad->Acquire();
 
 		//全キーの入力状態を取得する
-		BYTE oldkey[256] = {};
-		BYTE key[256] = {};
+		
 
-		for (int i = 0; i < 256; ++i)
-		{
+		for (int i = 0; i < 256; i++) {
 			oldkey[i] = key[i];
 		}
 		keyborad->GetDeviceState(sizeof(key), key);
