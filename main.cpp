@@ -241,7 +241,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
 	assert(SUCCEEDED(result));
 
+	BYTE key[256] = {};
+	BYTE oldkey[256] = {};
+
 	//DirectX初期化処理　ここまで
+
+	int imageMode = 0;
+	int frameMode = 0;
 
 	while (true) {
 		// メッセージがある?
@@ -260,12 +266,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		keyborad->Acquire();
 
 		//全キーの入力状態を取得する
-		BYTE key[256] = {};
+		for (int i = 0; i < 256; i++) {
+			oldkey[i] = key[i];
+		}
+
 		keyborad->GetDeviceState(sizeof(key), key);
 
-		//数字の0キーが
-		if (key[DIK_0]) {
-			OutputDebugStringA("Hit 0\n");
+		if (keyInstantPush(key[DIK_1], oldkey[DIK_1]) == true) {
+			if (imageMode == 0) {
+				imageMode = 1;
+			}
+			else {
+				imageMode = 0;
+			}
 		}
 
 		// バックバッファの番号を取得(2つなので0番か1番)
@@ -295,12 +308,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		}
 
+		if (keyInstantPush(key[DIK_3], oldkey[DIK_3]) == true) {
+			FLOAT clearColor[] = { 1.0f,1.0f, 1.0f,0.0f };
+			commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+		}
+
 		// 頂点データ
 		XMFLOAT3 vertices[] = {
 			{ -0.5f, -0.5f, 0.0f }, // 左下
 			{ -0.5f, +0.5f, 0.0f }, // 左上
 			{ +0.5f, -0.5f, 0.0f }, // 右下
+			{ 0.0f, 0.0f, 0.0f }, // 左下
+			{ 0.0f, 0.0f, 0.0f }, // 左上
+			{ 0.0f, 0.0f, 0.0f }, // 右上
 		};
+
+
+		if (imageMode == 1) {
+			vertices[3] = { +0.5f,-0.5f,0.0f };
+			vertices[4] = { -0.5f,+0.5f,0.0f };
+			vertices[5] = { +0.5f,+0.5f,0.0f };			
+		}
+		else {
+			vertices[3] = { 0.0f,0.0f,0.0f };
+			vertices[4] = { 0.0f,0.0f,0.0f };
+			vertices[5] = { 0.0f,0.0f,0.0f };
+		}
+
 		// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
 		UINT sizeVB = static_cast<UINT>(sizeof(XMFLOAT3) * _countof(vertices));
 
