@@ -279,7 +279,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				Mode = 1;
 			}
 			else {
-				Mode - 0;
+				Mode = 0;
 			}
 		}
 
@@ -316,14 +316,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			{ -0.5f, -0.5f, 0.0f }, // 左下
 			{ -0.5f, +0.5f, 0.0f }, // 左上
 			{ +0.5f, -0.5f, 0.0f }, // 右下
+			{ 0.0f, 0.0f, 0.0f }, // 右下
+			{ 0.0f, 0.0f, 0.0f }, // 左上
 			{ 0.0f, 0.0f, 0.0f }, // 右上
 		};
 
 		if (Mode == 1) {
-			vertices[3] = { +0.5f,+0.5f,0.0f };
+			vertices[3] = { +0.5f,-0.5f,0.0f };
+			vertices[4] = { -0.5f,+0.5f,0.0f };
+			vertices[5] = { +0.5f,+0.5f,0.0f };
 		}
 		else {
 			vertices[3] = { 0.0f,0.0f,0.0f };
+			vertices[4] = { 0.0f,0.0f,0.0f };
+			vertices[5] = { 0.0f,0.0f,0.0f };
 		}
 
 
