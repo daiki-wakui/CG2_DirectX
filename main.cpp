@@ -282,7 +282,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(SUCCEEDED(result));
 
 	//値を書き込むと自動的に転送される
-	constMapMaterial->color = XMFLOAT4(1, 0, 0, 0.5f);
+	constMapMaterial->color = XMFLOAT4(1, 1, 1, 1.0f);
 
 	//ゲームループ
 	while (true) {
@@ -340,8 +340,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// 頂点データ
 		XMFLOAT3 vertices[] = {
 			{ -0.5f, -0.5f, 0.0f }, // 左下
-			{ -0.5f, +0.5f, 0.0f }, // 左上
 			{ +0.5f, -0.5f, 0.0f }, // 右下
+			{ -0.5f, 0.0f, 0.0f }, // 左中
+			{ +0.5f, 0.0f, 0.0f }, // 右中
+			{ -0.5f, +0.5f, 0.0f }, // 左上
+			{ +0.5f, +0.5f, 0.0f }, // 右上
 		};
 		// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
 		UINT sizeVB = static_cast<UINT>(sizeof(XMFLOAT3) * _countof(vertices));
@@ -570,7 +573,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		commandList->SetGraphicsRootSignature(rootSignature);
 
 		// プリミティブ形状の設定コマンド
-		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // リストの形状
 
 		// 頂点バッファビューの設定コマンド
 		commandList->IASetVertexBuffers(0, 1, &vbView);
