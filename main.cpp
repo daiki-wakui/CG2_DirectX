@@ -4,6 +4,7 @@
 #include <cassert>
 #include <vector>
 #include <string>
+#include "GameScene.h"
 
 #include <DirectXMath.h>
 using namespace DirectX;
@@ -241,10 +242,49 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
 	assert(SUCCEEDED(result));
 
-	
-
 	//DirectX初期化処理　ここまで
 
+	//描画初期化処理
+	// 
+	//定数バッファ用データ構造体(マテリアル)
+	struct ConstBufferDataMaterial {
+		XMFLOAT4 color;	//色(RGBA)
+	};
+
+	//ヒープ設定
+	D3D12_HEAP_PROPERTIES cbHeapProp{};
+	cbHeapProp.Type = D3D12_HEAP_TYPE_UPLOAD;	//GPUへの転送用
+
+	//リソース設定
+	D3D12_RESOURCE_DESC cbResourceDesc{};
+	cbResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	cbResourceDesc.Width = (sizeof(ConstBufferDataMaterial) + 0xff) & ~0xff;
+	cbResourceDesc.Height = 1;
+	cbResourceDesc.DepthOrArraySize = 1;
+	cbResourceDesc.MipLevels = 1;
+	cbResourceDesc.SampleDesc.Count = 1;
+	cbResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	ID3D12Resource* constBuffMaterial = nullptr;
+	//定数バッファの生成
+	result = device->CreateCommittedResource(
+		&cbHeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&cbResourceDesc,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&constBuffMaterial));
+	assert(SUCCEEDED(result));
+
+	//定数バッファのマッピング
+	ConstBufferDataMaterial* constMapMaterial = nullptr;
+	result = constBuffMaterial->Map(0, nullptr, (void**)&constMapMaterial);	//マッピング
+	assert(SUCCEEDED(result));
+
+	//値を書き込むと自動的に転送される
+	constMapMaterial->color = XMFLOAT4(1, 0, 0, 0.5f);
+
+	//ゲームループ
 	while (true) {
 		// メッセージがある?
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -472,11 +512,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		pipelineDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 0~255指定のRGBA
 		pipelineDesc.SampleDesc.Count = 1; // 1ピクセルにつき1回サンプリング
 
+		//ルートパラメータの設定(03_02)
+		D3D12_ROOT_PARAMETER rootParam = {};
+		rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	//定数バッファビュー
+		rootParam.Descriptor.ShaderRegister - 0;	//定数バッファ番号
+		rootParam.Descriptor.RegisterSpace = 0;	//デフォルト値
+		rootParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;	//全てのシェーダから見える
+
 		// ルートシグネチャ
 		ID3D12RootSignature* rootSignature;
 		// ルートシグネチャの設定
 		D3D12_ROOT_SIGNATURE_DESC rootSignatureDesc{};
 		rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+		//＋03_02
+		rootSignatureDesc.pParameters = &rootParam;	//ルートパラメータの先頭アドレス
+		rootSignatureDesc.NumParameters = 1;	//ルートパラメータ数
+
 		// ルートシグネチャのシリアライズ
 		ID3DBlob* rootSigBlob = nullptr;
 		result = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0,
@@ -523,6 +574,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// 頂点バッファビューの設定コマンド
 		commandList->IASetVertexBuffers(0, 1, &vbView);
+
+		//定数バッファビュー(CBV)の設定コマンド(03_02)
+		commandList->SetGraphicsRootConstantBufferView(0, constBuffMaterial->GetGPUVirtualAddress());
 
 		// 描画コマンド
 		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
