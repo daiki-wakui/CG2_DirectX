@@ -4,6 +4,7 @@
 #include <cassert>
 #include <vector>
 #include <string>
+#include "KeyBoard.h"
 
 #include <DirectXMath.h>
 using namespace DirectX;
@@ -217,29 +218,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	UINT64 fenceVal = 0;
 	result = device->CreateFence(fenceVal, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 
-	//DirectInputの初期化
-	IDirectInput8* directInput = nullptr;
-	result = DirectInput8Create(
-		w.hInstance,
-		DIRECTINPUT_VERSION,
-		IID_IDirectInput8,
-	(void**)&directInput, nullptr);
-	assert(SUCCEEDED(result));
-
-	//キーボードデバイスの生成
-	IDirectInputDevice8* keyborad = nullptr;
-	result = directInput->CreateDevice(GUID_SysKeyboard, &keyborad, NULL);
-	assert(SUCCEEDED(result));
-
-	//入力データ形式のセット
-	result = keyborad->SetDataFormat(&c_dfDIKeyboard);	//標準形式
-	assert(SUCCEEDED(result));
-
-	//排他制御レベルのセット
-	result = keyborad->SetCooperativeLevel(
-		hwnd,
-		DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
-	assert(SUCCEEDED(result));
+	KeyBoard keyboard(result,hwnd,w);
 
 	//DirectX初期化処理　ここまで
 
@@ -288,11 +267,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	result = indexBuff->Map(0, nullptr, (void**)&indexMap);
 	assert(SUCCEEDED(result));
 	// 全頂点に対して
-	for (int i = 0; i < _countof(indices); i++) {
-		indexMap[i] = indices[i]; // 座標をコピー
-	}
+	//for (int i = 0; i < _countof(indices); i++) {
+	//	indexMap[i] = indices[i]; // 座標をコピー
+	//}
 	// 繋がりを解除
-	indexBuff->Unmap(0, nullptr);
+	//Buff->Unmap(0, nullptr);
 
 	//ヒープ設定
 	D3D12_HEAP_PROPERTIES cbHeapProp{};
@@ -341,18 +320,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// DirectX毎フレーム処理 ここから
 
-		//キーボード情報の取得開始
-		keyborad->Acquire();
-
-		//全キーの入力状態を取得する
-		BYTE key[256] = {};
-		keyborad->GetDeviceState(sizeof(key), key);
-
-		//数字の0キーが
-		if (key[DIK_0]) {
-			OutputDebugStringA("Hit 0\n");
-		}
-
 		// バックバッファの番号を取得(2つなので0番か1番)
 		UINT bbIndex = swapChain->GetCurrentBackBufferIndex();
 
@@ -374,8 +341,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
 		// 4.描画コマンド　ここから
-		
-		if (key[DIK_SPACE]) {
+		keyboard.Update();
+
+		if (keyboard.keyPush(DIK_SPACE)) {
 			FLOAT clearColor[] = { 0.75f,0.1f, 0.1f,0.0f };
 			commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		}
