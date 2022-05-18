@@ -244,6 +244,112 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//DirectX初期化処理　ここまで
 
 	//描画初期化処理
+	// 頂点データ
+	XMFLOAT3 vertices[] = {
+		{ -0.5f, -0.5f, 0.0f }, // 左下
+		{ +0.5f, -0.5f, 0.0f }, // 右下
+		{ -0.5f, +0.5f, 0.0f }, // 左上
+	};
+
+	// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
+	UINT sizeVB = static_cast<UINT>(sizeof(XMFLOAT3) * _countof(vertices));
+
+	// 頂点バッファの設定
+	D3D12_HEAP_PROPERTIES heapProp{}; // ヒープ設定
+	heapProp.Type = D3D12_HEAP_TYPE_UPLOAD; // GPUへの転送用
+	// リソース設定
+	D3D12_RESOURCE_DESC resDesc{};
+	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resDesc.Width = sizeVB; // 頂点データ全体のサイズ
+	resDesc.Height = 1;
+	resDesc.DepthOrArraySize = 1;
+	resDesc.MipLevels = 1;
+	resDesc.SampleDesc.Count = 1;
+	resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	// 頂点バッファの生成
+	ID3D12Resource* vertBuff = nullptr;
+	result = device->CreateCommittedResource(
+		&heapProp, // ヒープ設定
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc, // リソース設定
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&vertBuff));
+	assert(SUCCEEDED(result));
+
+	// GPU上のバッファに対応した仮想メモリ(メインメモリ上)を取得
+	XMFLOAT3* vertMap = nullptr;
+	result = vertBuff->Map(0, nullptr, (void**)&vertMap);
+	assert(SUCCEEDED(result));
+	// 全頂点に対して
+	for (int i = 0; i < _countof(vertices); i++) {
+		vertMap[i] = vertices[i]; // 座標をコピー
+	}
+	// 繋がりを解除
+	vertBuff->Unmap(0, nullptr);
+
+	// 頂点バッファビューの作成
+	D3D12_VERTEX_BUFFER_VIEW vbView{};
+	// GPU仮想アドレス
+	vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();
+	// 頂点バッファのサイズ
+	vbView.SizeInBytes = sizeVB;
+	// 頂点1つ分のデータサイズ
+	vbView.StrideInBytes = sizeof(XMFLOAT3);
+
+	ID3DBlob* vsBlob = nullptr; // 頂点シェーダオブジェクト
+	ID3DBlob* psBlob = nullptr; // ピクセルシェーダオブジェクト
+	ID3DBlob* errorBlob = nullptr; // エラーオブジェクト
+	// 頂点シェーダの読み込みとコンパイル
+	result = D3DCompileFromFile(
+		L"BasicVS.hlsl", // シェーダファイル名
+		nullptr,
+		D3D_COMPILE_STANDARD_FILE_INCLUDE, // インクルード可能にする
+		"main", "vs_5_0", // エントリーポイント名、シェーダーモデル指定
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, // デバッグ用設定
+		0,
+		&vsBlob, &errorBlob);
+
+	// ピクセルシェーダの読み込みとコンパイル
+	result = D3DCompileFromFile(
+		L"BasicPS.hlsl", // シェーダファイル名
+		nullptr,
+		D3D_COMPILE_STANDARD_FILE_INCLUDE, // インクルード可能にする
+		"main", "ps_5_0", // エントリーポイント名、シェーダーモデル指定
+		D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, // デバッグ用設定
+		0,
+		&psBlob, &errorBlob);
+
+	// エラーなら
+	if (FAILED(result)) {
+		// errorBlobからエラー内容をstring型にコピー
+		std::string error;
+		error.resize(errorBlob->GetBufferSize());
+		std::copy_n((char*)errorBlob->GetBufferPointer(),
+			errorBlob->GetBufferSize(),
+			error.begin());
+		error += "\n";
+		// エラー内容を出力ウィンドウに表示
+		OutputDebugStringA(error.c_str());
+		exit(1);
+	}
+
+	// 頂点レイアウト
+	D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+		{
+			"POSITION",						//セマンティック名
+			0,								//同じセマンティック名が複数あるときに使うインデックス(0でよい)
+			DXGI_FORMAT_R32G32B32_FLOAT,	//要素数とビット数を表す(XYZの3つでfloat型なのでR32G32B32_FLOAT)
+			0,								//入力スロットインデックス
+			D3D12_APPEND_ALIGNED_ELEMENT,	//データのオフセット値(D3D12_APPEND_ALIGNED_ELEMENだと自動設定)
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,	//入力データ種別(標準はD3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA)
+			0								//一度に描画するインスタンス数(0でよい)
+		},
+	};
+
+
+
 	
 	//定数バッファ用データ構造体(マテリアル)
 	struct ConstBufferDataMaterial {
@@ -259,9 +365,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//インデックスデータ全体のサイズ
 	UINT sizeIB = static_cast<UINT>(sizeof(uint16_t) * _countof(indices));
 
-	// 頂点バッファの設定
+	//バッファの設定
 	D3D12_HEAP_PROPERTIES heapProp{}; // ヒープ設定
-	heapProp.Type = D3D12_HEAP_TYPE_UPLOAD; // GPUへの転送用
 	
 	// リソース設定
 	D3D12_RESOURCE_DESC resDesc{};
@@ -283,16 +388,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		nullptr,
 		IID_PPV_ARGS(&indexBuff));
 
-	// GPU上のバッファに対応した仮想メモリ(メインメモリ上)を取得
-	XMFLOAT3* indexMap = nullptr;
+	//インデックスバッファをマッピング
+	uint16_t* indexMap = nullptr;
 	result = indexBuff->Map(0, nullptr, (void**)&indexMap);
 	assert(SUCCEEDED(result));
-	// 全頂点に対して
+	// 全インデックスに対して
 	for (int i = 0; i < _countof(indices); i++) {
-		indexMap[i] = indices[i]; // 座標をコピー
+		indexMap[i] = indices[i]; // インデックスをコピー
 	}
-	// 繋がりを解除
+	// マッピング解除
 	indexBuff->Unmap(0, nullptr);
+
+	//インデックスバッファビューの生成(03_04)
+	D3D12_INDEX_BUFFER_VIEW ibView{};
+	ibView.BufferLocation = indexBuff->GetGPUVirtualAddress();
+	ibView.Format = DXGI_FORMAT_R16_UINT;
+	ibView.SizeInBytes = sizeIB;
 
 	//ヒープ設定
 	D3D12_HEAP_PROPERTIES cbHeapProp{};
@@ -373,6 +484,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		FLOAT clearColor[] = { 0.1f,0.25f, 0.5f,0.0f }; //背景色
 		commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
+		//グラフィックコマンド
+		//インデックスバッファビューの設定コマンド
+		commandList->IASetIndexBuffer(&ibView);
+
 		// 4.描画コマンド　ここから
 		
 		if (key[DIK_SPACE]) {
@@ -380,72 +495,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 		}
 
-		// 頂点データ
-		XMFLOAT3 vertices[] = {
-			{ -0.5f, -0.5f, 0.0f }, // 左下
-			{ +0.5f, -0.5f, 0.0f }, // 右下
-			{ -0.5f, +0.5f, 0.0f }, // 左上
-		};
+		
 
-		// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
-		UINT sizeVB = static_cast<UINT>(sizeof(XMFLOAT3) * _countof(vertices));
+		
 
-		// 頂点バッファの設定
-		D3D12_HEAP_PROPERTIES heapProp{}; // ヒープ設定
-		heapProp.Type = D3D12_HEAP_TYPE_UPLOAD; // GPUへの転送用
-		// リソース設定
-		D3D12_RESOURCE_DESC resDesc{};
-		resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-		resDesc.Width = sizeVB; // 頂点データ全体のサイズ
-		resDesc.Height = 1;
-		resDesc.DepthOrArraySize = 1;
-		resDesc.MipLevels = 1;
-		resDesc.SampleDesc.Count = 1;
-		resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+		
 
-		// 頂点バッファの生成
-		ID3D12Resource* vertBuff = nullptr;
-		result = device->CreateCommittedResource(
-			&heapProp, // ヒープ設定
-			D3D12_HEAP_FLAG_NONE,
-			&resDesc, // リソース設定
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&vertBuff));
-		assert(SUCCEEDED(result));
-
-		// GPU上のバッファに対応した仮想メモリ(メインメモリ上)を取得
-		XMFLOAT3* vertMap = nullptr;
-		result = vertBuff->Map(0, nullptr, (void**)&vertMap);
-		assert(SUCCEEDED(result));
-		// 全頂点に対して
-		for (int i = 0; i < _countof(vertices); i++) {
-			vertMap[i] = vertices[i]; // 座標をコピー
-		}
-		// 繋がりを解除
-		vertBuff->Unmap(0, nullptr);
-
-		// 頂点バッファビューの作成
-		D3D12_VERTEX_BUFFER_VIEW vbView{};
-		// GPU仮想アドレス
-		vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();
-		// 頂点バッファのサイズ
-		vbView.SizeInBytes = sizeVB;
-		// 頂点1つ分のデータサイズ
-		vbView.StrideInBytes = sizeof(XMFLOAT3);
-
-		ID3DBlob* vsBlob = nullptr; // 頂点シェーダオブジェクト
-		ID3DBlob* psBlob = nullptr; // ピクセルシェーダオブジェクト
-		ID3DBlob* errorBlob = nullptr; // エラーオブジェクト
-		// 頂点シェーダの読み込みとコンパイル
-		result = D3DCompileFromFile(
-			L"BasicVS.hlsl", // シェーダファイル名
-			nullptr,
-			D3D_COMPILE_STANDARD_FILE_INCLUDE, // インクルード可能にする
-			"main", "vs_5_0", // エントリーポイント名、シェーダーモデル指定
-			D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, // デバッグ用設定
-			0,
-			&vsBlob, &errorBlob);
+		
 
 		// エラーなら
 		if (FAILED(result)) {
@@ -461,15 +517,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			assert(0);
 		}
 
-		// ピクセルシェーダの読み込みとコンパイル
-		result = D3DCompileFromFile(
-			L"BasicPS.hlsl", // シェーダファイル名
-			nullptr,
-			D3D_COMPILE_STANDARD_FILE_INCLUDE, // インクルード可能にする
-			"main", "ps_5_0", // エントリーポイント名、シェーダーモデル指定
-			D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION, // デバッグ用設定
-			0,
-			&psBlob, &errorBlob);
+		
 
 		// エラーなら
 		if (FAILED(result)) {
@@ -485,18 +533,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			assert(0);
 		}
 
-		// 頂点レイアウト
-		D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-			{
-				"POSITION",						//セマンティック名
-				0,								//同じセマンティック名が複数あるときに使うインデックス(0でよい)
-				DXGI_FORMAT_R32G32B32_FLOAT,	//要素数とビット数を表す(XYZの3つでfloat型なのでR32G32B32_FLOAT)
-				0,								//入力スロットインデックス
-				D3D12_APPEND_ALIGNED_ELEMENT,	//データのオフセット値(D3D12_APPEND_ALIGNED_ELEMENだと自動設定)
-				D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,	//入力データ種別(標準はD3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA)
-				0								//一度に描画するインスタンス数(0でよい)
-			}, 
-		};
+	
 
 		// グラフィックスパイプライン設定
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineDesc{};
@@ -625,6 +662,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// 描画コマンド
 		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+		commandList->DrawInstanced(_countof(indices), 1, 0, 0, 0); // 全ての頂点を使って描画
 		// 4.描画コマンド　ここまで
 
 		// 5.リソースバリアを戻す
