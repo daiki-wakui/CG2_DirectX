@@ -366,10 +366,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	UINT sizeIB = static_cast<UINT>(sizeof(uint16_t) * _countof(indices));
 
 	//バッファの設定
-	D3D12_HEAP_PROPERTIES heapProp{}; // ヒープ設定
+	//D3D12_HEAP_PROPERTIES heapProp{}; // ヒープ設定
 	
 	// リソース設定
-	D3D12_RESOURCE_DESC resDesc{};
+	
 	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	resDesc.Width = sizeIB; //インデックスに入る分のサイズ
 	resDesc.Height = 1;
@@ -661,8 +661,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		commandList->SetGraphicsRootConstantBufferView(0, constBuffMaterial->GetGPUVirtualAddress());
 
 		// 描画コマンド
-		commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
-		commandList->DrawInstanced(_countof(indices), 1, 0, 0, 0); // 全ての頂点を使って描画
+		//commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+		commandList->DrawIndexedInstanced(_countof(indices), 1, 0, 0, 0); // 全ての頂点を使って描画
 		// 4.描画コマンド　ここまで
 
 		// 5.リソースバリアを戻す
