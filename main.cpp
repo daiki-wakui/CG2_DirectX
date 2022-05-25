@@ -244,12 +244,27 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//DirectX初期化処理　ここまで
 
 	//描画初期化処理
-	// 頂点データ
-	XMFLOAT3 vertices[] = {
-		{ -0.5f, -0.5f, 0.0f }, // 左下
-		{ +0.5f, -0.5f, 0.0f }, // 右下
-		{ -0.5f, +0.5f, 0.0f }, // 左上
+	
+	//頂点データ構造体
+	struct Vertex{
+		XMFLOAT3 pos;
+		XMFLOAT2 uv;
 	};
+
+	// 頂点データ 04_01
+	Vertex vertices[] = {
+		{{-0.4f,-0.7f,0.0f},{0.0f,1.0f}},
+		{{-0.4f,+0.7f,0.0f},{0.0f,0.0f}},
+		{{+0.4f,-0.7f,0.0f},{1.0f,1.0f}},
+		{{+0.4f,+0.7f,0.0f},{1.0f,0.0f}},
+	};
+
+	//// 頂点データ
+	//XMFLOAT3 vertices[] = {
+	//	{ -0.5f, -0.5f, 0.0f }, // 左下
+	//	{ +0.5f, -0.5f, 0.0f }, // 右下
+	//	{ -0.5f, +0.5f, 0.0f }, // 左上
+	//};
 
 	// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
 	UINT sizeVB = static_cast<UINT>(sizeof(XMFLOAT3) * _countof(vertices));
@@ -356,8 +371,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		XMFLOAT4 color;	//色(RGBA)
 	};
 
-	//インデックスデータ(03_04)
-	uint16_t indices[] = {
+	//インデックスデータ(04_01)
+	unsigned short indices[] = {
 		0,1,2,
 		1,2,3,
 	};
