@@ -176,14 +176,15 @@ void DirectXInit::DrawingInit() {
 
 	//値を書き込むと自動的に転送される
 	//ここで色変更
-	constMapMaterial->color = XMFLOAT4(1, 0, 0, 0.5f);
+	constMapMaterial->color = XMFLOAT4(1, 1, 1, 0.5f);
 
-	// 頂点データ
-	XMFLOAT3 vertices[] = {
-		{ -0.5f, -0.5f, 0.0f }, // 左下
-		{ -0.5f, +0.5f, 0.0f }, // 左上
-		{ +0.5f, -0.5f, 0.0f }, // 右下
-		{ +0.5f, +0.5f, 0.0f }, // 右上
+	//頂点データ
+	Vertex vertices[] = {
+		//x		   y	   z	   u       v
+		{{ -0.4f, -0.7f,  0.0f} , {0.0f , 1.0f}},	//左下
+		{{ -0.4f, +0.7f,  0.0f} , {0.0f , 0.0f}},	//左上
+		{{ +0.4f, -0.7f,  0.0f} , {1.0f , 1.0f}},	//右下
+		{{ +0.4f, +0.7f,  0.0f} , {1.0f , 0.0f}},	//右上
 	};
 
 	//インデックスデータ
@@ -193,7 +194,7 @@ void DirectXInit::DrawingInit() {
 	};
 
 	// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
-	UINT sizeVB = static_cast<UINT>(sizeof(XMFLOAT3) * _countof(vertices));
+	UINT sizeVB = static_cast<UINT>(sizeof(vertices[0]) * _countof(vertices));
 
 	// 頂点バッファの設定
 	heapProp.Type = D3D12_HEAP_TYPE_UPLOAD; // GPUへの転送用
@@ -270,7 +271,7 @@ void DirectXInit::DrawingInit() {
 	// 頂点バッファのサイズ
 	vbView.SizeInBytes = sizeVB;
 	// 頂点1つ分のデータサイズ
-	vbView.StrideInBytes = sizeof(XMFLOAT3);
+	vbView.StrideInBytes = sizeof(vertices[0]);
 
 	// 頂点シェーダの読み込みとコンパイル
 	result = D3DCompileFromFile(
@@ -325,10 +326,15 @@ void DirectXInit::DrawingInit() {
 	// 頂点シェーダに渡すための頂点データを整える
 	// 頂点レイアウト
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-	{
-		"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
-		D3D12_APPEND_ALIGNED_ELEMENT,
-		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		{	//x,y,z座標
+			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
+		{	//u,v座標
+			"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0
 		},
 	};
 

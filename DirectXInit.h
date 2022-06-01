@@ -15,6 +15,13 @@ using namespace DirectX;
 
 class DirectXInit : public Windows {
 private:
+
+	//頂点データ構造体
+	struct Vertex {
+		XMFLOAT3 pos;
+		XMFLOAT2 uv;
+	};
+
 	//DirectX初期化処理用変数
 	ID3D12Device* device = nullptr;
 	IDXGIFactory7* dxgiFactory = nullptr;
@@ -41,7 +48,7 @@ private:
 	// 頂点バッファの生成
 	ID3D12Resource* vertBuff = nullptr;
 	//　頂点バッファのデータ転送
-	XMFLOAT3* vertMap = nullptr;
+	Vertex* vertMap = nullptr;
 
 
 	ID3DBlob* vsBlob = nullptr; // 頂点シェーダオブジェクト
@@ -92,7 +99,9 @@ public:
 	// レンダーターゲットビューのハンドルを取得
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle;
 
+	//頂点データ
 	XMFLOAT3 vertices[64] = {};
+
 	UINT sizeVB;
 	UINT sizeIB;
 

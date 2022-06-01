@@ -1,8 +1,6 @@
-cbuffer ConstBufferDataMaterial : register(b0) {
-	float4 color;	//êF(RGBA)
-};
+#include "Basic.hlsli"
 
-float4 main(float4 pos : SV_POSITION) : SV_TARGET
+float4 main(VSOutput input) : SV_TARGET
 {
-	return color;
+	return float4(input.uv, 0, 1);
 }
