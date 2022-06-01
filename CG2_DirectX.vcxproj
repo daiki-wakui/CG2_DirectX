@@ -139,7 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DirectX.cpp" />
+    <ClCompile Include="DirectXInit.cpp" />
     <ClCompile Include="KeyBoard.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Windows.cpp" />
@@ -159,7 +159,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DirectX.h" />
+    <ClInclude Include="DirectXInit.h" />
     <ClInclude Include="Global.h" />
     <ClInclude Include="KeyBoard.h" />
     <ClInclude Include="Windows.h" />
