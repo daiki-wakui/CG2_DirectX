@@ -5,6 +5,7 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <cassert>
+#include <vector>
 //数学ライブラリ
 #include <DirectXMath.h>
 using namespace DirectX;
@@ -23,7 +24,7 @@ private:
 	};
 
 	//DirectX初期化処理用変数
-	ID3D12Device* device = nullptr;
+	
 	IDXGIFactory7* dxgiFactory = nullptr;
 	IDXGISwapChain4* swapChain = nullptr;
 	ID3D12CommandAllocator* commandAllocator = nullptr;
@@ -72,7 +73,10 @@ private:
 	D3D12_RESOURCE_DESC cbResourceDesc{};
 
 	//ルートパラメータの設定
-	D3D12_ROOT_PARAMETER rootParam = {};
+	D3D12_ROOT_PARAMETER rootParams[2] = {};
+
+	//設定を元にSRV用デスクリプタヒープを生成
+	ID3D12DescriptorHeap* srvHeap = nullptr;
 
 	ID3D12Resource* constBuffMaterial = nullptr;
 
@@ -85,6 +89,7 @@ public:
 	D3D12_VERTEX_BUFFER_VIEW vbView{};
 
 	HRESULT result;
+	ID3D12Device* device = nullptr;
 
 	ID3D12GraphicsCommandList* commandList = nullptr;
 
@@ -100,7 +105,10 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle;
 
 	//頂点データ
-	XMFLOAT3 vertices[64] = {};
+	XMFLOAT3 vertices[12] = {};
+	uint16_t indices[12]={};
+
+	//std::vector <uint16_t> indices;
 
 	UINT sizeVB;
 	UINT sizeIB;
