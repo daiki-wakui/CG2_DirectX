@@ -3,6 +3,8 @@
 #include <dxgi1_6.h>
 #include <cassert>
 #include "Global.h"
+
+
 //数学ライブラリ
 #include <DirectXMath.h>
 using namespace DirectX;
@@ -142,36 +144,42 @@ void DirectXInit::Init(HWND& hwnd) {
 //描画初期化処理
 void DirectXInit::DrawingInit() {
 	//画像イメージデータ
-	//横方向ピクセル数
-	const size_t textureWidth = 256;
-	//盾方向ピクセル数
-	const size_t textureHeight = 256;
-	//配列の要素数
-	const size_t imageDataCount = textureWidth * textureHeight;
-	//画像イメージデータ配列
-	XMFLOAT4* imageData = new XMFLOAT4[imageDataCount];
+	TexMetadata metadata{};
+	ScratchImage scratchImg{};
 
-	//全ピクセルの色を初期化
-	for (size_t i = 0; i < imageDataCount; i++) {
-		imageData[i].x = 1.0f;	//R
-		imageData[i].y = 0.0f;	//G
-		imageData[i].z = 0.0f;	//B
-		imageData[i].w = 1.0f;	//A
+	result = LoadFromWICFile(
+		L"Resourse/gennbanoko.png",
+		WIC_FLAGS_NONE,
+		&metadata, scratchImg);
+
+	//
+	ScratchImage mipChain{};
+
+	result = GenerateMipMaps(
+		scratchImg.GetImages(),scratchImg.GetImageCount(),scratchImg.GetMetadata(),
+		TEX_FILTER_DEFAULT,0,mipChain);
+	if (SUCCEEDED(result)) {
+		scratchImg = std::move(mipChain);
+		metadata = scratchImg.GetMetadata();
 	}
 
+	metadata.format = MakeSRGB(metadata.format);
+
+	
 	//ヒープ設定
 	D3D12_HEAP_PROPERTIES textureHeapProp{};
 	textureHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;
 	textureHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
 	textureHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+
 	//リソース設定
 	D3D12_RESOURCE_DESC textureResouseDesc{};
 	textureResouseDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	textureResouseDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	textureResouseDesc.Width = textureWidth;
-	textureResouseDesc.Height = textureHeight;
-	textureResouseDesc.DepthOrArraySize = 1;
-	textureResouseDesc.MipLevels = 1;
+	textureResouseDesc.Format = metadata.format;
+	textureResouseDesc.Width = metadata.width;
+	textureResouseDesc.Height = (UINT)metadata.height;
+	textureResouseDesc.DepthOrArraySize = (UINT16)metadata.arraySize;
+	textureResouseDesc.MipLevels = (UINT16)metadata.mipLevels;
 	textureResouseDesc.SampleDesc.Count = 1;
 
 	//テクスチャバッファ生成
@@ -185,17 +193,17 @@ void DirectXInit::DrawingInit() {
 		IID_PPV_ARGS(&texBuff));
 
 	//テクスチャバッファにデータ転送
-	result = texBuff->WriteToSubresource(
-		0,
-		nullptr,	//全領域へコピー
-		imageData,	//元データアドレス
-		sizeof(XMFLOAT4) * textureWidth,	//1ラインサイズ
-		sizeof(XMFLOAT4) * imageDataCount	//全サイズ
-	);
-	assert(SUCCEEDED(result));
-	
-	//転送後、元データ解放
-	delete[] imageData;
+	for (size_t i = 0; i < metadata.mipLevels; i++) {
+		const Image* img = scratchImg.GetImage(i, 0, 0);
+		result = texBuff->WriteToSubresource(
+			(UINT)i,
+			nullptr,
+			img->pixels,
+			(UINT)img->rowPitch,
+			(UINT)img->slicePitch
+		);
+		assert(SUCCEEDED(result));
+	}
 
 	//SRVの最大個数
 	const size_t kMaxSRVCount = 2056;
@@ -212,11 +220,10 @@ void DirectXInit::DrawingInit() {
 
 	//シェーダリソースビュー設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	srvDesc.Shader4ComponentMapping =
-		D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = textureResouseDesc.Format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.MipLevels = textureResouseDesc.MipLevels;
 
 	//SRVヒープの先頭ハンドルを取得
 	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = srvHeap->GetCPUDescriptorHandleForHeapStart();
@@ -230,7 +237,7 @@ void DirectXInit::DrawingInit() {
 		XMFLOAT4 color;	//色(RGBA)
 	};
 
-	//ヒープ設定
+	//ヒープ設定	
 	cbHeapProp.Type = D3D12_HEAP_TYPE_UPLOAD;	//GPUへの転送用
 
 	//リソース設定
@@ -243,7 +250,6 @@ void DirectXInit::DrawingInit() {
 	cbResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 	//定数バッファの生成
-	//assert(SUCCEEDED(result));
 	result = device->CreateCommittedResource(
 		&cbHeapProp,
 		D3D12_HEAP_FLAG_NONE,
@@ -527,8 +533,7 @@ void DirectXInit::Update() {
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
 
-	//インデックスバッファビューの設定コマンド
-	commandList->IASetIndexBuffer(&ibView);
+	
 	// 4.描画コマンド　ここから
 	// 4.描画コマンド　ここまで
 }
@@ -593,6 +598,9 @@ void DirectXInit::GraphicCommand() {
 
 	// プリミティブ形状の設定コマンド
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
+
+	//インデックスバッファビューの設定コマンド
+	commandList->IASetIndexBuffer(&ibView);
 
 	// 頂点バッファビューの設定コマンド
 	commandList->IASetVertexBuffers(0, 1, &vbView);

@@ -12,7 +12,7 @@ using namespace DirectX;
 //D3Dコンパイラ
 #include <d3dcompiler.h>
 #pragma comment(lib, "d3dcompiler.lib")
-
+#include <DirectXTex.h>
 
 class DirectXInit : public Windows {
 private:
@@ -105,8 +105,8 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle;
 
 	//頂点データ
-	XMFLOAT3 vertices[12] = {};
-	uint16_t indices[12]={};
+	XMFLOAT3 vertices[6] = {};
+	uint16_t indices[6]={};
 
 	//std::vector <uint16_t> indices;
 
