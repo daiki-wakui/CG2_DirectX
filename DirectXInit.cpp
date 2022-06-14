@@ -237,6 +237,7 @@ void DirectXInit::DrawingInit() {
 		XMFLOAT4 color;	//色(RGBA)
 	};
 
+	
 	//ヒープ設定	
 	cbHeapProp.Type = D3D12_HEAP_TYPE_UPLOAD;	//GPUへの転送用
 
@@ -532,8 +533,6 @@ void DirectXInit::Update() {
 	FLOAT clearColor[] = { 0.1f,0.25f, 0.5f,0.0f }; // 青っぽい色
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
 
-
-	
 	// 4.描画コマンド　ここから
 	// 4.描画コマンド　ここまで
 }
