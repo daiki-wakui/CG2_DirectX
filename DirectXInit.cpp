@@ -313,12 +313,20 @@ void DirectXInit::DrawingInit() {
 	//	{{ +0.4f, +0.7f,  0.0f} , {1.0f , 0.0f}},	//右上
 	//};
 
+	//Vertex vertices[] = {
+	//	//x		   y	   z	   u       v
+	//	{{ 0.0f  , 100.0f,  0.0f} , {0.0f , 1.0f}},	//左下
+	//	{{ 0.0f  , 0.0f  ,  0.0f} , {0.0f , 0.0f}},	//左上
+	//	{{ 100.0f, 100.0f,  0.0f} , {1.0f , 1.0f}},	//右下
+	//	{{ 100.0f, 0.0f  ,  0.0f} , {1.0f , 0.0f}},	//右上
+	//};
+
 	Vertex vertices[] = {
 		//x		   y	   z	   u       v
-		{{ 0.0f  , 100.0f,  0.0f} , {0.0f , 1.0f}},	//左下
-		{{ 0.0f  , 0.0f  ,  0.0f} , {0.0f , 0.0f}},	//左上
-		{{ 100.0f, 100.0f,  0.0f} , {1.0f , 1.0f}},	//右下
-		{{ 100.0f, 0.0f  ,  0.0f} , {1.0f , 0.0f}},	//右上
+		{{ -50.0f, -50.0f, 50.0f} , {0.0f , 1.0f}},	//左下
+		{{ -50.0f,  50.0f, 50.0f} , {0.0f , 0.0f}},	//左上
+		{{  50.0f, -50.0f, 50.0f} , {1.0f , 1.0f}},	//右下
+		{{  50.0f,  50.0f, 50.0f} , {1.0f , 0.0f}},	//右上
 	};
 
 	//インデックスデータ
@@ -566,6 +574,27 @@ void DirectXInit::DrawingInit() {
 	constMapTransform->mat.r[1].m128_f32[1] = -2.0f / window_height;
 	constMapTransform->mat.r[3].m128_f32[0] = -1.0f;
 	constMapTransform->mat.r[3].m128_f32[1] = 1.0f;
+
+	/*constMapTransform->mat = XMMatrixOrthographicOffCenterLH(
+
+	);*/
+
+	//透視投影行列の計算
+	/*constMapTransform->mat = XMMatrixPerspectiveFovLH(
+		XMConvertToRadians(45.0f),
+		(float)window_width / window_height,
+		0.1f, 1000.0f
+	);*/
+
+	//射影変換行列(透視投影)
+	XMMATRIX matProjection = XMMatrixPerspectiveFovLH(
+		XMConvertToRadians(45.0f),
+		(float)window_width / window_height,
+		0.1f, 1000.0
+	);
+
+	//定数バッファに転送
+	constMapTransform->mat = matProjection;
 }
 
 //毎フレーム処理
