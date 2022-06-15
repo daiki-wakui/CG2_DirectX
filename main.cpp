@@ -36,6 +36,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//DirectX毎フレーム処理　ここから
 
+		//カメラ回転
 		if (keyboard.keyPush(DIK_D) || keyboard.keyPush(DIK_A)) {
 			if (keyboard.keyPush(DIK_D)) {
 				angle += XMConvertToRadians(1.0f);
@@ -44,11 +45,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				angle -= XMConvertToRadians(1.0f);
 			}
 
+			//Y軸まわりに回転
 			directX.eye.x = -100 * sinf(angle);
 			directX.eye.z = -100 * cosf(angle);
 			directX.matView = XMMatrixLookAtLH(XMLoadFloat3(&directX.eye), XMLoadFloat3(&directX.target), XMLoadFloat3(&directX.up));
 		}
 
+		//定数バッファにデータ転送
 		directX.constMapTransform->mat = directX.matView * directX.matProjection;
 
 		directX.DrawUpdate();
