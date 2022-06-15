@@ -129,6 +129,7 @@ public:
 
 	XMMATRIX matProjection;
 
+	XMMATRIX matWorld;
 	XMMATRIX matView;
 	XMFLOAT3 eye;
 	XMFLOAT3 target;

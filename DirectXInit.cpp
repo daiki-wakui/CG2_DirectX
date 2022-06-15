@@ -571,6 +571,27 @@ void DirectXInit::DrawingInit() {
 	//座標変換
 	constMapTransform->mat = XMMatrixOrthographicOffCenterLH(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
 
+	//ワールド変換行列
+	matWorld = XMMatrixIdentity();
+
+	//スケーリング
+	XMMATRIX matScale;
+	matScale = XMMatrixScaling(1.0f, 0.5f, 1.0f);
+	matWorld *= matScale;
+
+	//回転
+	XMMATRIX matRot;
+	matRot = XMMatrixIdentity();
+	matRot *= XMMatrixRotationZ(XMConvertToRadians(0.0f));	//Z 0度回転
+	matRot *= XMMatrixRotationX(XMConvertToRadians(15.0f));	//X 0度回転
+	matRot *= XMMatrixRotationY(XMConvertToRadians(30.0f));	//Y 0度回転
+	matWorld *= matRot;
+
+	//平行移動
+	XMMATRIX matTrans;
+	matTrans = XMMatrixTranslation(-50.0f, 0, 0);
+	matWorld *= matTrans;
+
 	//透視投影行列の計算
 	//射影変換行列(透視投影)
 	matProjection = XMMatrixPerspectiveFovLH(
@@ -586,7 +607,7 @@ void DirectXInit::DrawingInit() {
 	matView = XMMatrixLookAtLH(XMLoadFloat3(&eye),XMLoadFloat3(&target),XMLoadFloat3(&up));
 
 	//定数バッファビュー
-	constMapTransform->mat = matView * matProjection;
+	constMapTransform->mat = matWorld * matView * matProjection;
 }
 
 void DirectXInit::Update(KeyBoard& key){
