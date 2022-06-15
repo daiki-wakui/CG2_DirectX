@@ -568,23 +568,15 @@ void DirectXInit::DrawingInit() {
 	assert(SUCCEEDED(result));
 
 	//単位行列を代入
-	constMapTransform->mat = XMMatrixIdentity();
 	//座標変換
-	constMapTransform->mat.r[0].m128_f32[0] = 2.0f / window_width;
-	constMapTransform->mat.r[1].m128_f32[1] = -2.0f / window_height;
-	constMapTransform->mat.r[3].m128_f32[0] = -1.0f;
-	constMapTransform->mat.r[3].m128_f32[1] = 1.0f;
-
-	/*constMapTransform->mat = XMMatrixOrthographicOffCenterLH(
-
-	);*/
+	constMapTransform->mat= XMMatrixOrthographicOffCenterLH(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
 
 	//透視投影行列の計算
-	/*constMapTransform->mat = XMMatrixPerspectiveFovLH(
+	constMapTransform->mat = XMMatrixPerspectiveFovLH(
 		XMConvertToRadians(45.0f),
 		(float)window_width / window_height,
 		0.1f, 1000.0f
-	);*/
+	);
 
 	//射影変換行列(透視投影)
 	XMMATRIX matProjection = XMMatrixPerspectiveFovLH(
@@ -593,7 +585,7 @@ void DirectXInit::DrawingInit() {
 		0.1f, 1000.0
 	);
 
-	//定数バッファに転送
+	//定数バッファビュー
 	constMapTransform->mat = matProjection;
 }
 
