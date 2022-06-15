@@ -156,8 +156,8 @@ void DirectXInit::DrawingInit() {
 	ScratchImage mipChain{};
 
 	result = GenerateMipMaps(
-		scratchImg.GetImages(),scratchImg.GetImageCount(),scratchImg.GetMetadata(),
-		TEX_FILTER_DEFAULT,0,mipChain);
+		scratchImg.GetImages(), scratchImg.GetImageCount(), scratchImg.GetMetadata(),
+		TEX_FILTER_DEFAULT, 0, mipChain);
 	if (SUCCEEDED(result)) {
 		scratchImg = std::move(mipChain);
 		metadata = scratchImg.GetMetadata();
@@ -165,7 +165,7 @@ void DirectXInit::DrawingInit() {
 
 	metadata.format = MakeSRGB(metadata.format);
 
-	
+
 	//ヒープ設定
 	D3D12_HEAP_PROPERTIES textureHeapProp{};
 	textureHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;
@@ -238,12 +238,12 @@ void DirectXInit::DrawingInit() {
 	};
 
 	//定数バッファ用データ構造体(3D変換行列)
-	struct ConstBufferDataTransfrom{
+	/*struct ConstBufferDataTransfrom {
 		XMMATRIX mat;
-	};
+	};*/
 
-	
-	ConstBufferDataTransfrom* constMapTransform = nullptr;
+
+	//ConstBufferDataTransfrom* constMapTransform = nullptr;
 
 	{
 		//ヒープ設定
@@ -519,7 +519,7 @@ void DirectXInit::DrawingInit() {
 
 	//ルートパラメータの設定
 	rootParams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	//定数バッファビュー
-	rootParams[0] .Descriptor.ShaderRegister - 0;	//定数バッファ番号
+	rootParams[0].Descriptor.ShaderRegister - 0;	//定数バッファ番号
 	rootParams[0].Descriptor.RegisterSpace = 0;	//デフォルト値
 	rootParams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;	//全てのシェーダから見える
 	//テクスチャレジスタ0番
@@ -569,30 +569,31 @@ void DirectXInit::DrawingInit() {
 
 	//単位行列を代入
 	//座標変換
-	constMapTransform->mat= XMMatrixOrthographicOffCenterLH(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
+	constMapTransform->mat = XMMatrixOrthographicOffCenterLH(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
 
 	//透視投影行列の計算
 	//射影変換行列(透視投影)
-	XMMATRIX matProjection = XMMatrixPerspectiveFovLH(
+	matProjection = XMMatrixPerspectiveFovLH(
 		XMConvertToRadians(45.0f),
 		(float)window_width / window_height,
 		0.1f, 1000.0f
 	);
 
 	//ビュー変換行列
-	XMMATRIX matView;
-	XMFLOAT3 eye(0, 0, -100);
-	XMFLOAT3 target(0, 0, 0);
-	XMFLOAT3 up(0, 1, 0);
+	eye = { 0, 0, -100 };
+	target = { 0, 0, 0 };
+	up = { 0, 1, 0};
 	matView = XMMatrixLookAtLH(XMLoadFloat3(&eye),XMLoadFloat3(&target),XMLoadFloat3(&up));
 
 	//定数バッファビュー
-	constMapTransform->mat = matProjection;
+	constMapTransform->mat = matView * matProjection;
+}
+
+void DirectXInit::Update(KeyBoard& key){
 }
 
 //毎フレーム処理
-void DirectXInit::Update() {
-
+void DirectXInit::DrawUpdate() {
 	// バックバッファの番号を取得(2つなので0番か1番)
 	UINT bbIndex = swapChain->GetCurrentBackBufferIndex();
 	// 1.リソースバリアで書き込み可能に変更
@@ -650,7 +651,6 @@ void DirectXInit::ResourceBarrier() {
 
 //グラフィックコマンド
 void DirectXInit::GraphicCommand() {
-
 	// ビューポート設定コマンド
 	viewport.Width = window_width;
 	viewport.Height = window_height;

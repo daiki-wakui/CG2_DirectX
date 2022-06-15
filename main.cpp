@@ -17,6 +17,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	MSG msg{}; // メッセージ
 
 	//DirectX初期化処理ここから
+	float angle = 0.0f;
+
 	directX.Init(windows.hwnd);
 	KeyBoard keyboard(directX.result, windows.hwnd, windows.w);
 	//DirectX初期化処理ここまで
@@ -33,13 +35,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 
 		//DirectX毎フレーム処理　ここから
-		directX.Update();
+
+		if (keyboard.keyPush(DIK_D) || keyboard.keyPush(DIK_A)) {
+			if (keyboard.keyPush(DIK_D)) {
+				angle += XMConvertToRadians(1.0f);
+			}
+			else if (keyboard.keyPush(DIK_A)) {
+				angle -= XMConvertToRadians(1.0f);
+			}
+
+			directX.eye.x = -100 * sinf(angle);
+			directX.eye.z = -100 * cosf(angle);
+			directX.matView = XMMatrixLookAtLH(XMLoadFloat3(&directX.eye), XMLoadFloat3(&directX.target), XMLoadFloat3(&directX.up));
+		}
+
+		directX.constMapTransform->mat = directX.matView * directX.matProjection;
+
+		directX.DrawUpdate();
 		keyboard.Update();
 
 		if (keyboard.keyPush(DIK_SPACE)) {
 			FLOAT clearColor[] = { 0.75f,0.1f, 0.1f,0.0f };
 			directX.commandList->ClearRenderTargetView(directX.rtvHandle, clearColor, 0, nullptr);
 		}
+
+
 
 		//グラフィックコマンド
 		directX.GraphicCommand();

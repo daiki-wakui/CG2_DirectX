@@ -6,6 +6,8 @@
 #include <dxgi1_6.h>
 #include <cassert>
 #include <vector>
+#include "KeyBoard.h"
+
 //数学ライブラリ
 #include <DirectXMath.h>
 using namespace DirectX;
@@ -78,8 +80,8 @@ private:
 	//設定を元にSRV用デスクリプタヒープを生成
 	ID3D12DescriptorHeap* srvHeap = nullptr;
 
-	ID3D12Resource* constBuffMaterial = nullptr;
-	ID3D12Resource* constBuffTransform = nullptr;
+	
+	
 
 public:
 	// パイプランステートの生成
@@ -116,10 +118,29 @@ public:
 
 	D3D12_INDEX_BUFFER_VIEW ibView{};
 
+	struct ConstBufferDataTransfrom {
+		XMMATRIX mat;
+	};
+
+	ConstBufferDataTransfrom* constMapTransform = nullptr;
+
+	ID3D12Resource* constBuffMaterial = nullptr;
+	ID3D12Resource* constBuffTransform = nullptr;
+
+	XMMATRIX matProjection;
+
+	XMMATRIX matView;
+	XMFLOAT3 eye;
+	XMFLOAT3 target;
+	XMFLOAT3 up;
+
+	
+
 	DirectXInit();
 	void Init(HWND& hwnd);
 	void DrawingInit();
-	void Update();
+	void Update(KeyBoard &key);
+	void DrawUpdate();
 	void ResourceBarrier();
 	void GraphicCommand();
 };
