@@ -572,18 +572,14 @@ void DirectXInit::DrawingInit() {
 	constMapTransform->mat= XMMatrixOrthographicOffCenterLH(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
 
 	//“§Ž‹“Š‰es—ñ‚ÌŒvŽZ
-	constMapTransform->mat = XMMatrixPerspectiveFovLH(
+	//ŽË‰e•ÏŠ·s—ñ(“§Ž‹“Š‰e)
+	XMMATRIX matProjection = XMMatrixPerspectiveFovLH(
 		XMConvertToRadians(45.0f),
 		(float)window_width / window_height,
 		0.1f, 1000.0f
 	);
 
-	//ŽË‰e•ÏŠ·s—ñ(“§Ž‹“Š‰e)
-	XMMATRIX matProjection = XMMatrixPerspectiveFovLH(
-		XMConvertToRadians(45.0f),
-		(float)window_width / window_height,
-		0.1f, 1000.0
-	);
+
 
 	//’è”ƒoƒbƒtƒ@ƒrƒ…[
 	constMapTransform->mat = matProjection;
