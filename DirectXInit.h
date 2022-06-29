@@ -22,6 +22,7 @@ private:
 	//頂点データ構造体
 	struct Vertex {
 		XMFLOAT3 pos;
+		XMFLOAT3 normal;
 		XMFLOAT2 uv;
 	};
 
