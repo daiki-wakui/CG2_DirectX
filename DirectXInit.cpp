@@ -143,6 +143,47 @@ void DirectXInit::Init(HWND& hwnd) {
 
 //描画初期化処理
 void DirectXInit::DrawingInit() {
+	//深度バッファリソース設定
+	D3D12_RESOURCE_DESC depthResourceDesc{};
+	depthResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthResourceDesc.Width = window_width;
+	depthResourceDesc.Height = window_height;
+	depthResourceDesc.DepthOrArraySize = 1;
+	depthResourceDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthResourceDesc.SampleDesc.Count = 1;
+	depthResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+	//深度値用ヒーププロパティ
+	D3D12_HEAP_PROPERTIES deptHeapProp{};
+	deptHeapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
+	//深度値のクリア値
+	D3D12_CLEAR_VALUE depthClearValue{};
+	depthClearValue.DepthStencil.Depth = 1.0f;
+	depthClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+
+	//リソース生成
+	ID3D12Resource* depthBuff = nullptr;
+	result = device->CreateCommittedResource(
+		&deptHeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&depthResourceDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthClearValue,
+		IID_PPV_ARGS(&depthBuff));
+
+	//深度ビュー用デスクリプタヒープ生成
+	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
+	dsvHeapDesc.NumDescriptors = 1;
+	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	result = device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvHeap));
+
+	//深度ビュー生成
+	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	device->CreateDepthStencilView(
+		depthBuff,
+		&dsvDesc,
+		dsvHeap->GetCPUDescriptorHandleForHeapStart());
+
 	//画像イメージデータ
 	TexMetadata metadata{};
 	ScratchImage scratchImg{};
@@ -323,16 +364,58 @@ void DirectXInit::DrawingInit() {
 
 	Vertex vertices[] = {
 		//x		   y	   z	   u       v
-		{{ -50.0f, -50.0f, 50.0f} , {0.0f , 1.0f}},	//左下
-		{{ -50.0f,  50.0f, 50.0f} , {0.0f , 0.0f}},	//左上
-		{{  50.0f, -50.0f, 50.0f} , {1.0f , 1.0f}},	//右下
-		{{  50.0f,  50.0f, 50.0f} , {1.0f , 0.0f}},	//右上
+		//前
+		{{ -5.0f, -5.0f, -5.0f} , {0.0f , 1.0f}},	//左下
+		{{ -5.0f,  5.0f, -5.0f} , {0.0f , 0.0f}},	//左上
+		{{  5.0f, -5.0f, -5.0f} , {1.0f , 1.0f}},	//右下
+		{{  5.0f,  5.0f, -5.0f} , {1.0f , 0.0f}},	//右上
+		//後
+		{{ -5.0f, -5.0f,  5.0f} , {0.0f , 1.0f}},	//左下
+		{{ -5.0f,  5.0f,  5.0f} , {0.0f , 0.0f}},	//左上
+		{{  5.0f, -5.0f,  5.0f} , {1.0f , 1.0f}},	//右下
+		{{  5.0f,  5.0f,  5.0f} , {1.0f , 0.0f}},	//右上
+		////左
+		{{ -5.0f, -5.0f, -5.0f} , {0.0f , 1.0f}},	//左下
+		{{ -5.0f, -5.0f,  5.0f} , {0.0f , 0.0f}},	//左上
+		{{ -5.0f,  5.0f, -5.0f} , {1.0f , 1.0f}},	//右下
+		{{ -5.0f,  5.0f,  5.0f} , {1.0f , 0.0f}},	//右上
+		//右
+		{{  5.0f, -5.0f, -5.0f} , {0.0f , 1.0f}},	//左下
+		{{  5.0f, -5.0f,  5.0f} , {0.0f , 0.0f}},	//左上
+		{{  5.0f,  5.0f, -5.0f} , {1.0f , 1.0f}},	//右下
+		{{  5.0f,  5.0f,  5.0f} , {1.0f , 0.0f}},	//右上
+		//下
+		{{ -5.0f, -5.0f, -5.0f} , {0.0f , 1.0f}},	//左下
+		{{ -5.0f, -5.0f,  5.0f} , {0.0f , 0.0f}},	//左上
+		{{  5.0f, -5.0f, -5.0f} , {1.0f , 1.0f}},	//右下
+		{{  5.0f, -5.0f,  5.0f} , {1.0f , 0.0f}},	//右上
+		//上
+		{{ -5.0f,  5.0f, -5.0f} , {0.0f , 1.0f}},	//左下
+		{{ -5.0f,  5.0f,  5.0f} , {0.0f , 0.0f}},	//左上
+		{{  5.0f,  5.0f, -5.0f} , {1.0f , 1.0f}},	//右下
+		{{  5.0f,  5.0f,  5.0f} , {1.0f , 0.0f}},	//右上
 	};
 
 	//インデックスデータ
 	uint16_t indices[] = {
+		//前
 		0,1,2,
 		1,2,3,
+		//後
+		4,5,6,
+		5,6,7,
+		//左
+		8,9,10,
+		9,10,11,
+		//右
+		12,13,14,
+		13,14,15,
+		//下
+		16,17,18,
+		17,18,19,
+		//上
+		20,21,22,
+		21,22,23
 	};
 
 	// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
@@ -545,6 +628,13 @@ void DirectXInit::DrawingInit() {
 	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;	//ピクセルシェーダからのみ使用可能
 
+	//デプスステンシルステートの設定
+	pipelineDesc.DepthStencilState.DepthEnable = true;	//深度テスト
+	pipelineDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;	//書き込み許可
+	pipelineDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;	//小さければ合格
+	pipelineDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;	//深度値フォーマット
+
+
 	//ルートシグネクチャの設定
 	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	rootSignatureDesc.pParameters = rootParams;	//ルートパラメータの先頭アドレス
@@ -601,7 +691,7 @@ void DirectXInit::DrawingInit() {
 	);
 
 	//ビュー変換行列
-	eye = { 0, 0, -100 };
+	eye = { 0, -50, -100 };
 	target = { 0, 0, 0 };
 	up = { 0, 1, 0};
 	matView = XMMatrixLookAtLH(XMLoadFloat3(&eye),XMLoadFloat3(&target),XMLoadFloat3(&up));
@@ -626,12 +716,14 @@ void DirectXInit::DrawUpdate() {
 	// 2.描画先の変更
 	// レンダーターゲットビューのハンドルを取得
 	rtvHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
+	dsvHandle = dsvHeap->GetCPUDescriptorHandleForHeapStart();
 	rtvHandle.ptr += bbIndex * device->GetDescriptorHandleIncrementSize(rtvHeapDesc.Type);
-	commandList->OMSetRenderTargets(1, &rtvHandle, false, nullptr);
+	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 
 	// 3.画面クリア R G B A
 	FLOAT clearColor[] = { 0.1f,0.25f, 0.5f,0.0f }; // 青っぽい色
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// 4.描画コマンド　ここから
 	// 4.描画コマンド　ここまで

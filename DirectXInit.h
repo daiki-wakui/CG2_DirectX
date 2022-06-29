@@ -81,9 +81,12 @@ private:
 	ID3D12DescriptorHeap* srvHeap = nullptr;
 
 	
-	
+	//深度ビュー生成
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 
 public:
+	
+
 	// パイプランステートの生成
 	ID3D12PipelineState* pipelineState = nullptr;
 	// ルートシグネチャ
@@ -107,9 +110,15 @@ public:
 	// レンダーターゲットビューのハンドルを取得
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle;
 
+	//深度ビュー用デスクリプタヒープ生成
+	ID3D12DescriptorHeap* dsvHeap = nullptr;
+
+	//深度ステンシルビュー用デスクリプタヒープ生成
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
+
 	//頂点データ
-	XMFLOAT3 vertices[6] = {};
-	uint16_t indices[6]={};
+	XMFLOAT3 vertices[24] = {};
+	uint16_t indices[36]={};
 
 	//std::vector <uint16_t> indices;
 

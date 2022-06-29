@@ -55,6 +55,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			directX.matView = XMMatrixLookAtLH(XMLoadFloat3(&directX.eye), XMLoadFloat3(&directX.target), XMLoadFloat3(&directX.up));
 		}
 
+		if (keyboard.keyPush(DIK_W) || keyboard.keyPush(DIK_S)) {
+			if (keyboard.keyPush(DIK_W)) {
+				angle += XMConvertToRadians(1.0f);
+			}
+			else if (keyboard.keyPush(DIK_S)) {
+				angle -= XMConvertToRadians(1.0f);
+			}
+
+			//Y軸まわりに回転
+			directX.eye.y = -100 * sinf(angle);
+			directX.eye.z = -100 * cosf(angle);
+			directX.matView = XMMatrixLookAtLH(XMLoadFloat3(&directX.eye), XMLoadFloat3(&directX.target), XMLoadFloat3(&directX.up));
+		}
+
+
 		if (keyboard.keyPush(DIK_UP) || keyboard.keyPush(DIK_DOWN) || keyboard.keyPush(DIK_RIGHT) || keyboard.keyPush(DIK_LEFT)) {
 			if (keyboard.keyPush(DIK_UP)) {
 				position.z += 1.0f;
