@@ -306,11 +306,25 @@ void DirectXInit::DrawingInit() {
 			&cbResourceDesc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
-			IID_PPV_ARGS(&constBuffTransform));
+			IID_PPV_ARGS(&constBuffTransform0));
 		assert(SUCCEEDED(result));
 
 		//定数バッファのマッピング
-		result = constBuffTransform->Map(0, nullptr, (void**)&constMapTransform);	//マッピング
+		result = constBuffTransform0->Map(0, nullptr, (void**)&constMapTransform0);	//マッピング
+		assert(SUCCEEDED(result));
+
+		//定数バッファの生成
+		result = device->CreateCommittedResource(
+			&cbHeapProp,
+			D3D12_HEAP_FLAG_NONE,
+			&cbResourceDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&constBuffTransform1));
+		assert(SUCCEEDED(result));
+
+		//定数バッファのマッピング
+		result = constBuffTransform1->Map(0, nullptr, (void**)&constMapTransform1);	//マッピング
 		assert(SUCCEEDED(result));
 	}
 
@@ -678,7 +692,7 @@ void DirectXInit::DrawingInit() {
 
 	//単位行列を代入
 	//座標変換
-	constMapTransform->mat = XMMatrixOrthographicOffCenterLH(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
+	constMapTransform0->mat = XMMatrixOrthographicOffCenterLH(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
 
 	//ワールド変換行列
 	matWorld = XMMatrixIdentity();
@@ -716,7 +730,7 @@ void DirectXInit::DrawingInit() {
 	matView = XMMatrixLookAtLH(XMLoadFloat3(&eye),XMLoadFloat3(&target),XMLoadFloat3(&up));
 
 	//定数バッファビュー
-	constMapTransform->mat = matWorld * matView * matProjection;
+	constMapTransform0->mat = matWorld * matView * matProjection;
 }
 
 void DirectXInit::Update(KeyBoard& key){
@@ -823,10 +837,15 @@ void DirectXInit::GraphicCommand() {
 	//SRVヒープの先頭にあるSRVをルートパラメータ1番に設定
 	commandList->SetGraphicsRootDescriptorTable(1, srvGpuHandle);
 
-	//定数バッファビュー(CBV)の設定コマンド
-	commandList->SetGraphicsRootConstantBufferView(2, constBuffTransform->GetGPUVirtualAddress());
+	//0番定数バッファビュー(CBV)の設定コマンド
+	commandList->SetGraphicsRootConstantBufferView(2, constBuffTransform0->GetGPUVirtualAddress());
 
 	// 描画コマンド
-	//commandList->DrawInstanced(_countof(vertices), 1, 0, 0); // 全ての頂点を使って描画
+	commandList->DrawIndexedInstanced(_countof(indices), 1, 0, 0, 0); // 全ての頂点を使って描画
+
+	//1番定数バッファビュー(CBV)の設定コマンド
+	commandList->SetGraphicsRootConstantBufferView(2, constBuffTransform1->GetGPUVirtualAddress());
+
+	// 描画コマンド
 	commandList->DrawIndexedInstanced(_countof(indices), 1, 0, 0, 0); // 全ての頂点を使って描画
 }

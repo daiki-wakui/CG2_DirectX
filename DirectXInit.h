@@ -132,10 +132,13 @@ public:
 		XMMATRIX mat;
 	};
 
-	ConstBufferDataTransfrom* constMapTransform = nullptr;
-
 	ID3D12Resource* constBuffMaterial = nullptr;
-	ID3D12Resource* constBuffTransform = nullptr;
+
+	ID3D12Resource* constBuffTransform0 = nullptr;
+	ConstBufferDataTransfrom* constMapTransform0 = nullptr;
+
+	ID3D12Resource* constBuffTransform1 = nullptr;
+	ConstBufferDataTransfrom* constMapTransform1 = nullptr;
 
 	XMMATRIX matProjection;
 
@@ -145,6 +148,7 @@ public:
 	XMFLOAT3 target;
 	XMFLOAT3 up;
 
+	XMMATRIX matWorld1;
 	
 
 	DirectXInit();
