@@ -193,6 +193,16 @@ void DirectXInit::DrawingInit() {
 		WIC_FLAGS_NONE,
 		&metadata, scratchImg);
 
+	//画像二枚目
+	TexMetadata metadata2{};
+	ScratchImage scratchImg2{};
+
+	//テクスチャ読み込み
+	result = LoadFromWICFile(
+		L"Resourse/2.png",
+		WIC_FLAGS_NONE,
+		&metadata2, scratchImg2);
+
 	//
 	ScratchImage mipChain{};
 
@@ -204,7 +214,17 @@ void DirectXInit::DrawingInit() {
 		metadata = scratchImg.GetMetadata();
 	}
 
+	ScratchImage mipChain2{};
+	result = GenerateMipMaps(
+		scratchImg2.GetImages(), scratchImg2.GetImageCount(), scratchImg2.GetMetadata(),
+		TEX_FILTER_DEFAULT, 0, mipChain2);
+	if (SUCCEEDED(result)) {
+		scratchImg2 = std::move(mipChain2);
+		metadata2 = scratchImg2.GetMetadata();
+	}
+
 	metadata.format = MakeSRGB(metadata.format);
+	metadata2.format = MakeSRGB(metadata2.format);
 
 
 	//ヒープ設定
@@ -223,6 +243,16 @@ void DirectXInit::DrawingInit() {
 	textureResouseDesc.MipLevels = (UINT16)metadata.mipLevels;
 	textureResouseDesc.SampleDesc.Count = 1;
 
+	//リソース設定2
+	D3D12_RESOURCE_DESC textureResouseDesc2{};
+	textureResouseDesc2.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	textureResouseDesc2.Format = metadata2.format;
+	textureResouseDesc2.Width = metadata2.width;
+	textureResouseDesc2.Height = (UINT)metadata2.height;
+	textureResouseDesc2.DepthOrArraySize = (UINT16)metadata2.arraySize;
+	textureResouseDesc2.MipLevels = (UINT16)metadata2.mipLevels;
+	textureResouseDesc2.SampleDesc.Count = 1;
+
 	//テクスチャバッファ生成
 	ID3D12Resource* texBuff = nullptr;
 	result = device->CreateCommittedResource(
@@ -233,10 +263,33 @@ void DirectXInit::DrawingInit() {
 		nullptr,
 		IID_PPV_ARGS(&texBuff));
 
+	//テクスチャバッファ生成2
+	ID3D12Resource* texBuff2 = nullptr;
+	result = device->CreateCommittedResource(
+		&textureHeapProp,
+		D3D12_HEAP_FLAG_NONE,
+		&textureResouseDesc2,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&texBuff2));
+
 	//テクスチャバッファにデータ転送
 	for (size_t i = 0; i < metadata.mipLevels; i++) {
 		const Image* img = scratchImg.GetImage(i, 0, 0);
 		result = texBuff->WriteToSubresource(
+			(UINT)i,
+			nullptr,
+			img->pixels,
+			(UINT)img->rowPitch,
+			(UINT)img->slicePitch
+		);
+		assert(SUCCEEDED(result));
+	}
+
+	//テクスチャバッファにデータ転送
+	for (size_t i = 0; i < metadata2.mipLevels; i++) {
+		const Image* img = scratchImg2.GetImage(i, 0, 0);
+		result = texBuff2->WriteToSubresource(
 			(UINT)i,
 			nullptr,
 			img->pixels,
@@ -272,6 +325,20 @@ void DirectXInit::DrawingInit() {
 	//ハンドルの指す位置にシェーダリソースビュー生成
 	device->CreateShaderResourceView(texBuff, &srvDesc, srvHandle);
 
+
+	//一つハンドルを進める
+	UINT incrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	srvHandle.ptr += incrementSize;
+
+	//シェーダリソースビュー設定2
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
+	srvDesc2.Format = textureResouseDesc.Format;
+	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc2.Texture2D.MipLevels = textureResouseDesc.MipLevels;
+
+	//ハンドルの指す位置にシェーダリソースビュー生成
+	device->CreateShaderResourceView(texBuff2, &srvDesc2, srvHandle);
 
 	//定数バッファ用データ構造体(マテリアル)
 	struct ConstBufferDataMaterial {
@@ -677,6 +744,7 @@ void DirectXInit::DrawingInit() {
 }
 
 void DirectXInit::Update(KeyBoard& key){
+
 }
 
 //毎フレーム処理
@@ -739,7 +807,7 @@ void DirectXInit::ResourceBarrier() {
 }
 
 //グラフィックコマンド
-void DirectXInit::GraphicCommand() {
+void DirectXInit::GraphicCommand(KeyBoard& key) {
 	// ビューポート設定コマンド
 	viewport.Width = window_width;
 	viewport.Height = window_height;
@@ -776,9 +844,30 @@ void DirectXInit::GraphicCommand() {
 	//SRVヒープの設定コマンド
 	commandList->SetDescriptorHeaps(1, &srvHeap);
 	//SRVヒープの先頭アドレスを取得
-	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle = srvHeap->GetGPUDescriptorHandleForHeapStart();
+	srvGpuHandle = srvHeap->GetGPUDescriptorHandleForHeapStart();
 	//SRVヒープの先頭にあるSRVをルートパラメータ1番に設定
+	//commandList->SetGraphicsRootDescriptorTable(1, srvGpuHandle);
+	UINT incrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	if (key.keyInstantPush(DIK_SPACE)) {
+		if (isTex == 0) {
+			isTex = true;
+		}
+		else {
+			isTex = false;
+		}
+		
+		
+	}
+
+	if (isTex == true) {
+		srvGpuHandle.ptr += incrementSize;
+	}
+	else {
+		srvGpuHandle = srvHeap->GetGPUDescriptorHandleForHeapStart();
+	}
+	
 	commandList->SetGraphicsRootDescriptorTable(1, srvGpuHandle);
+
 
 	for (int i = 0; i < _countof(object3ds); i++) {
 		DrawObject3d(&object3ds[i], commandList, vbView, ibView, _countof(indices));
@@ -788,8 +877,6 @@ void DirectXInit::GraphicCommand() {
 
 void DirectXInit::InitializeObject3d(Object3d* object, ID3D12Device* device)
 {
-	HRESULT result;
-
 	D3D12_HEAP_PROPERTIES heapProp{};
 	heapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
 

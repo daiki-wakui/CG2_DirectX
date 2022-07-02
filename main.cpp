@@ -97,18 +97,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		if (keyboard.keyPush(DIK_LEFT)){ directX.object3ds[0].position.x -= 1.0f; }
 		
 
+
 		directX.DrawUpdate();
 		keyboard.Update();
 
-		if (keyboard.keyPush(DIK_SPACE)) {
-			FLOAT clearColor[] = { 0.75f,0.1f, 0.1f,0.0f };
-			directX.commandList->ClearRenderTargetView(directX.rtvHandle, clearColor, 0, nullptr);
-		}
-
-
-
 		//グラフィックコマンド
-		directX.GraphicCommand();
+		directX.GraphicCommand(keyboard);
 
 		directX.ResourceBarrier();
 		//DirectX毎フレーム処理　ここまで

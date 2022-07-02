@@ -86,7 +86,7 @@ private:
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 
 public:
-	
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle;
 
 	// パイプランステートの生成
 	ID3D12PipelineState* pipelineState = nullptr;
@@ -174,6 +174,7 @@ public:
 
 	Object3d object3ds[50];
 	
+	bool isTex = 0;
 
 	DirectXInit();
 	void Init(HWND& hwnd);
@@ -181,7 +182,7 @@ public:
 	void Update(KeyBoard &key);
 	void DrawUpdate();
 	void ResourceBarrier();
-	void GraphicCommand();
+	void GraphicCommand(KeyBoard& key);
 	void InitializeObject3d(Object3d* object, ID3D12Device* device);
 	void CallObject3dInit();
 	void UpdateObject3d(Object3d* object, XMMATRIX& matView, XMMATRIX& matProjection);
