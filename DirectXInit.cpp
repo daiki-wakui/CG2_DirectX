@@ -292,35 +292,6 @@ void DirectXInit::DrawingInit() {
 		cbResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 		CallObject3dInit();
-
-		//CallObject3dInit();
-		//定数バッファの生成
-		/*result = device->CreateCommittedResource(
-			&cbHeapProp,
-			D3D12_HEAP_FLAG_NONE,
-			&cbResourceDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&constBuffTransform0));
-		assert(SUCCEEDED(result));*/
-
-		//定数バッファのマッピング
-		//result = constBuffTransform0->Map(0, nullptr, (void**)&constMapTransform0);	//マッピング
-		//assert(SUCCEEDED(result));
-
-		//定数バッファの生成
-		/*result = device->CreateCommittedResource(
-			&cbHeapProp,
-			D3D12_HEAP_FLAG_NONE,
-			&cbResourceDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&constBuffTransform1));
-		assert(SUCCEEDED(result));*/
-
-		//定数バッファのマッピング
-		//result = constBuffTransform1->Map(0, nullptr, (void**)&constMapTransform1);	//マッピング
-		//assert(SUCCEEDED(result));
 	}
 
 	//ヒープ設定	
@@ -689,30 +660,6 @@ void DirectXInit::DrawingInit() {
 	for (size_t i = 0; i < _countof(object3ds); i++) {
 		UpdateObject3d(&object3ds[i], matView, matProjection);
 	}
-	//単位行列を代入
-	//座標変換
-	//constMapTransform0->mat = XMMatrixOrthographicOffCenterLH(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
-
-	//ワールド変換行列
-	//matWorld = XMMatrixIdentity();
-
-	////スケーリング
-	//XMMATRIX matScale;
-	//matScale = XMMatrixScaling(1.0f, 0.5f, 1.0f);
-	//matWorld *= matScale;
-
-	////回転
-	//XMMATRIX matRot;
-	//matRot = XMMatrixIdentity();
-	//matRot *= XMMatrixRotationZ(XMConvertToRadians(0.0f));	//Z 0度回転
-	//matRot *= XMMatrixRotationX(XMConvertToRadians(15.0f));	//X 0度回転
-	//matRot *= XMMatrixRotationY(XMConvertToRadians(30.0f));	//Y 0度回転
-	//matWorld *= matRot;
-
-	////平行移動
-	//XMMATRIX matTrans;
-	//matTrans = XMMatrixTranslation(-50.0f, 0, 0);
-	//matWorld *= matTrans;
 
 	//透視投影行列の計算
 	//射影変換行列(透視投影)
@@ -727,9 +674,6 @@ void DirectXInit::DrawingInit() {
 	target = { 0, 0, 0 };
 	up = { 0, 1, 0};
 	matView = XMMatrixLookAtLH(XMLoadFloat3(&eye),XMLoadFloat3(&target),XMLoadFloat3(&up));
-
-	//定数バッファビュー
-	//constMapTransform0->mat = matWorld * matView * matProjection;
 }
 
 void DirectXInit::Update(KeyBoard& key){
@@ -835,18 +779,6 @@ void DirectXInit::GraphicCommand() {
 	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle = srvHeap->GetGPUDescriptorHandleForHeapStart();
 	//SRVヒープの先頭にあるSRVをルートパラメータ1番に設定
 	commandList->SetGraphicsRootDescriptorTable(1, srvGpuHandle);
-
-	//0番定数バッファビュー(CBV)の設定コマンド
-	//commandList->SetGraphicsRootConstantBufferView(2, constBuffTransform0->GetGPUVirtualAddress());
-
-	//// 描画コマンド
-	//commandList->DrawIndexedInstanced(_countof(indices), 1, 0, 0, 0); // 全ての頂点を使って描画
-
-	////1番定数バッファビュー(CBV)の設定コマンド
-	//commandList->SetGraphicsRootConstantBufferView(2, constBuffTransform1->GetGPUVirtualAddress());
-
-	//// 描画コマンド
-	//commandList->DrawIndexedInstanced(_countof(indices), 1, 0, 0, 0); // 全ての頂点を使って描画
 
 	for (int i = 0; i < _countof(object3ds); i++) {
 		DrawObject3d(&object3ds[i], commandList, vbView, ibView, _countof(indices));

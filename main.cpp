@@ -87,42 +87,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 
 		//ワールド変換行列
-		
-
-		//スケーリング
-		//XMMATRIX matScale;
-		//matScale = XMMatrixScaling(scale.x, scale.y, scale.z);
-
-		////回転
-		//XMMATRIX matRot;
-		//matRot = XMMatrixIdentity();
-		//matRot *= XMMatrixRotationZ(rotation.z);	//Z 0度回転
-		//matRot *= XMMatrixRotationX(rotation.x);	//X 0度回転
-		//matRot *= XMMatrixRotationY(rotation.y);	//Y 0度回転
-
-		////平行移動
-		//XMMATRIX matTrans;
-		//matTrans = XMMatrixTranslation(position.x, position.y, position.z);
-
-		//directX.matWorld = XMMatrixIdentity();
-		//directX.matWorld *= matScale;
-		//directX.matWorld *= matRot;
-		//directX.matWorld *= matTrans;
-
-		//定数バッファにデータ転送
-		//directX.constMapTransform0->mat = directX.matWorld * directX.matView * directX.matProjection;
-
-
-		//ワールド変換行列2個目
-		//directX.matWorld1 = XMMatrixIdentity();
-		////各種変形行列を計算
-		//XMMATRIX matScale1 = XMMatrixScaling(1.0f, 1.0f, 1.0f);
-		//XMMATRIX matRot1 = XMMatrixRotationY(XM_PI / 4.0f);
-		//XMMATRIX matTrans1 = XMMatrixTranslation(-20.0f, 0, 0);
-		////ワールド行列を合成
-		//directX.matWorld1 = matScale1 * matRot1 * matTrans1;
-		////ワールド、ビュー、射影行列を合成してシェーダーに転送
-		//directX.constMapTransform1->mat = directX.matWorld1 * directX.matView * directX.matProjection;
 		for (size_t i = 0; i < _countof(directX.object3ds); i++) {
 			directX.UpdateObject3d(&directX.object3ds[i], directX.matView, directX.matProjection);
 		}
