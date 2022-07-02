@@ -278,14 +278,6 @@ void DirectXInit::DrawingInit() {
 		XMFLOAT4 color;	//色(RGBA)
 	};
 
-	//定数バッファ用データ構造体(3D変換行列)
-	/*struct ConstBufferDataTransfrom {
-		XMMATRIX mat;
-	};*/
-
-
-	//ConstBufferDataTransfrom* constMapTransform = nullptr;
-
 	{
 		//ヒープ設定
 		D3D12_HEAP_PROPERTIES cbHeapProp{};
@@ -299,33 +291,36 @@ void DirectXInit::DrawingInit() {
 		cbResourceDesc.SampleDesc.Count = 1;
 		cbResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
+		CallObject3dInit();
+
+		//CallObject3dInit();
 		//定数バッファの生成
-		result = device->CreateCommittedResource(
+		/*result = device->CreateCommittedResource(
 			&cbHeapProp,
 			D3D12_HEAP_FLAG_NONE,
 			&cbResourceDesc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
 			IID_PPV_ARGS(&constBuffTransform0));
-		assert(SUCCEEDED(result));
+		assert(SUCCEEDED(result));*/
 
 		//定数バッファのマッピング
-		result = constBuffTransform0->Map(0, nullptr, (void**)&constMapTransform0);	//マッピング
-		assert(SUCCEEDED(result));
+		//result = constBuffTransform0->Map(0, nullptr, (void**)&constMapTransform0);	//マッピング
+		//assert(SUCCEEDED(result));
 
 		//定数バッファの生成
-		result = device->CreateCommittedResource(
+		/*result = device->CreateCommittedResource(
 			&cbHeapProp,
 			D3D12_HEAP_FLAG_NONE,
 			&cbResourceDesc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
 			IID_PPV_ARGS(&constBuffTransform1));
-		assert(SUCCEEDED(result));
+		assert(SUCCEEDED(result));*/
 
 		//定数バッファのマッピング
-		result = constBuffTransform1->Map(0, nullptr, (void**)&constMapTransform1);	//マッピング
-		assert(SUCCEEDED(result));
+		//result = constBuffTransform1->Map(0, nullptr, (void**)&constMapTransform1);	//マッピング
+		//assert(SUCCEEDED(result));
 	}
 
 	//ヒープ設定	
@@ -690,30 +685,34 @@ void DirectXInit::DrawingInit() {
 	result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
 	assert(SUCCEEDED(result));
 
+
+	for (size_t i = 0; i < _countof(object3ds); i++) {
+		UpdateObject3d(&object3ds[i], matView, matProjection);
+	}
 	//単位行列を代入
 	//座標変換
-	constMapTransform0->mat = XMMatrixOrthographicOffCenterLH(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
+	//constMapTransform0->mat = XMMatrixOrthographicOffCenterLH(0.0f, window_width, window_height, 0.0f, 0.0f, 1.0f);
 
 	//ワールド変換行列
-	matWorld = XMMatrixIdentity();
+	//matWorld = XMMatrixIdentity();
 
-	//スケーリング
-	XMMATRIX matScale;
-	matScale = XMMatrixScaling(1.0f, 0.5f, 1.0f);
-	matWorld *= matScale;
+	////スケーリング
+	//XMMATRIX matScale;
+	//matScale = XMMatrixScaling(1.0f, 0.5f, 1.0f);
+	//matWorld *= matScale;
 
-	//回転
-	XMMATRIX matRot;
-	matRot = XMMatrixIdentity();
-	matRot *= XMMatrixRotationZ(XMConvertToRadians(0.0f));	//Z 0度回転
-	matRot *= XMMatrixRotationX(XMConvertToRadians(15.0f));	//X 0度回転
-	matRot *= XMMatrixRotationY(XMConvertToRadians(30.0f));	//Y 0度回転
-	matWorld *= matRot;
+	////回転
+	//XMMATRIX matRot;
+	//matRot = XMMatrixIdentity();
+	//matRot *= XMMatrixRotationZ(XMConvertToRadians(0.0f));	//Z 0度回転
+	//matRot *= XMMatrixRotationX(XMConvertToRadians(15.0f));	//X 0度回転
+	//matRot *= XMMatrixRotationY(XMConvertToRadians(30.0f));	//Y 0度回転
+	//matWorld *= matRot;
 
-	//平行移動
-	XMMATRIX matTrans;
-	matTrans = XMMatrixTranslation(-50.0f, 0, 0);
-	matWorld *= matTrans;
+	////平行移動
+	//XMMATRIX matTrans;
+	//matTrans = XMMatrixTranslation(-50.0f, 0, 0);
+	//matWorld *= matTrans;
 
 	//透視投影行列の計算
 	//射影変換行列(透視投影)
@@ -730,7 +729,7 @@ void DirectXInit::DrawingInit() {
 	matView = XMMatrixLookAtLH(XMLoadFloat3(&eye),XMLoadFloat3(&target),XMLoadFloat3(&up));
 
 	//定数バッファビュー
-	constMapTransform0->mat = matWorld * matView * matProjection;
+	//constMapTransform0->mat = matWorld * matView * matProjection;
 }
 
 void DirectXInit::Update(KeyBoard& key){
@@ -838,14 +837,92 @@ void DirectXInit::GraphicCommand() {
 	commandList->SetGraphicsRootDescriptorTable(1, srvGpuHandle);
 
 	//0番定数バッファビュー(CBV)の設定コマンド
-	commandList->SetGraphicsRootConstantBufferView(2, constBuffTransform0->GetGPUVirtualAddress());
+	//commandList->SetGraphicsRootConstantBufferView(2, constBuffTransform0->GetGPUVirtualAddress());
 
-	// 描画コマンド
-	commandList->DrawIndexedInstanced(_countof(indices), 1, 0, 0, 0); // 全ての頂点を使って描画
+	//// 描画コマンド
+	//commandList->DrawIndexedInstanced(_countof(indices), 1, 0, 0, 0); // 全ての頂点を使って描画
 
-	//1番定数バッファビュー(CBV)の設定コマンド
-	commandList->SetGraphicsRootConstantBufferView(2, constBuffTransform1->GetGPUVirtualAddress());
+	////1番定数バッファビュー(CBV)の設定コマンド
+	//commandList->SetGraphicsRootConstantBufferView(2, constBuffTransform1->GetGPUVirtualAddress());
 
-	// 描画コマンド
-	commandList->DrawIndexedInstanced(_countof(indices), 1, 0, 0, 0); // 全ての頂点を使って描画
+	//// 描画コマンド
+	//commandList->DrawIndexedInstanced(_countof(indices), 1, 0, 0, 0); // 全ての頂点を使って描画
+
+	for (int i = 0; i < _countof(object3ds); i++) {
+		DrawObject3d(&object3ds[i], commandList, vbView, ibView, _countof(indices));
+	}
+
+}
+
+void DirectXInit::InitializeObject3d(Object3d* object, ID3D12Device* device)
+{
+	HRESULT result;
+
+	D3D12_HEAP_PROPERTIES heapProp{};
+	heapProp.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+	D3D12_RESOURCE_DESC resdesc{};
+	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resDesc.Width = (sizeof(ConstBufferDataTransfrom) + 0xff) & ~0xff;
+	resDesc.Height = 1;
+	resDesc.DepthOrArraySize = 1;
+	resDesc.MipLevels = 1;
+	resDesc.SampleDesc.Count = 1;
+	resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	result = device->CreateCommittedResource(
+			&heapProp,
+			D3D12_HEAP_FLAG_NONE,
+			&resDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&object->constBuffTransform));
+		assert(SUCCEEDED(result));
+
+	//定数バッファのマッピング
+	result = object->constBuffTransform->Map(0, nullptr, (void**)&object->constMapTransform);	//マッピング
+	assert(SUCCEEDED(result));
+}
+
+void DirectXInit::CallObject3dInit()
+{
+	for (int i = 0; i < _countof(object3ds); i++) {
+		InitializeObject3d(&object3ds[i], device);
+
+		if (i > 0) {
+			object3ds[i].parent = &object3ds[i - 1];
+			object3ds[i].scale = { 0.9f,0.9f,0.9f };
+			object3ds[i].rotation = { 0.0f,0.0f,XMConvertToRadians(30.0f) };
+			object3ds[i].position = { 0.0f,0.0f,-8.0f };
+		}
+	}
+}
+
+void DirectXInit::UpdateObject3d(Object3d* object, XMMATRIX& matView, XMMATRIX& matProjection){
+	XMMATRIX matScale, matRot, matTrans;
+
+	matScale = XMMatrixScaling(object->scale.x, object->scale.y, object->scale.z);
+	matRot = XMMatrixIdentity();
+	matRot *= XMMatrixRotationZ(object->rotation.z);
+	matRot *= XMMatrixRotationY(object->rotation.y);
+	matRot *= XMMatrixRotationX(object->rotation.x);
+	matTrans = XMMatrixTranslation(object->position.x, object->position.y, object->position.z);
+	object->matWorld = XMMatrixIdentity();
+	object->matWorld *= matScale;
+	object->matWorld *= matRot;
+	object->matWorld *= matTrans;
+
+	if (object->parent != nullptr) {
+		object->matWorld *= object->parent->matWorld;
+	}
+
+	object->constMapTransform->mat = object->matWorld * matView * matProjection;
+}
+
+void DirectXInit::DrawObject3d(Object3d* object, ID3D12GraphicsCommandList* commandList, D3D12_VERTEX_BUFFER_VIEW& vbView, D3D12_INDEX_BUFFER_VIEW& ibView, UINT numIndices)
+{
+	commandList->IASetVertexBuffers(0, 1, &vbView);
+	commandList->IASetIndexBuffer(&ibView);
+	commandList->SetGraphicsRootConstantBufferView(2, object->constBuffTransform->GetGPUVirtualAddress());
+	commandList->DrawIndexedInstanced(numIndices, 1, 0, 0, 0);
 }

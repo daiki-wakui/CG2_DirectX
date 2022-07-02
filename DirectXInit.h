@@ -149,6 +149,30 @@ public:
 	XMFLOAT3 up;
 
 	XMMATRIX matWorld1;
+
+	struct Object3d
+	{
+		//定数バッファ(行列用)
+		ID3D12Resource* constBuffTransform;
+
+		//定数バッファアップ(行列用)
+		ConstBufferDataTransfrom* constMapTransform;
+
+		//アフィン変換情報
+		XMFLOAT3 scale = { 1,1,1 };
+		XMFLOAT3 rotation = { 0,0,0 };
+		XMFLOAT3 position = { 0,0,0 };
+
+		//ワールド変換行列
+		XMMATRIX matWorld;
+
+		//親オブジェクトへのポインタ
+		Object3d* parent = nullptr;
+	};
+
+	const size_t kOjectConst = 50;
+
+	Object3d object3ds[50];
 	
 
 	DirectXInit();
@@ -158,5 +182,15 @@ public:
 	void DrawUpdate();
 	void ResourceBarrier();
 	void GraphicCommand();
+	void InitializeObject3d(Object3d* object, ID3D12Device* device);
+	void CallObject3dInit();
+	void UpdateObject3d(Object3d* object, XMMATRIX& matView, XMMATRIX& matProjection);
+	void DrawObject3d(
+		Object3d* object,
+		ID3D12GraphicsCommandList* commandList,
+		D3D12_VERTEX_BUFFER_VIEW& vbView,
+		D3D12_INDEX_BUFFER_VIEW& ibView,
+		UINT numIndices);
 };
+
 
