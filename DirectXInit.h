@@ -7,6 +7,7 @@
 #include <cassert>
 #include <vector>
 #include "KeyBoard.h"
+#include "Deeptest.h"
 
 //数学ライブラリ
 #include <DirectXMath.h>
@@ -18,6 +19,7 @@ using namespace DirectX;
 
 class DirectXInit : public Windows {
 private:
+	
 
 	//頂点データ構造体
 	struct Vertex {
@@ -82,10 +84,11 @@ private:
 	ID3D12DescriptorHeap* srvHeap = nullptr;
 
 	
-	//深度ビュー生成
-	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+	////深度ビュー生成
+	//D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 
 public:
+
 	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle;
 
 	// パイプランステートの生成
@@ -97,6 +100,9 @@ public:
 
 	HRESULT result;
 	ID3D12Device* device = nullptr;
+
+	//深度クラス
+	Deeptest Depth;
 
 	ID3D12GraphicsCommandList* commandList = nullptr;
 
@@ -111,11 +117,11 @@ public:
 	// レンダーターゲットビューのハンドルを取得
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle;
 
-	//深度ビュー用デスクリプタヒープ生成
-	ID3D12DescriptorHeap* dsvHeap = nullptr;
+	////深度ビュー用デスクリプタヒープ生成
+	//ID3D12DescriptorHeap* dsvHeap = nullptr;
 
 	//深度ステンシルビュー用デスクリプタヒープ生成
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
+	//D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
 
 	//頂点データ
 	XMFLOAT3 vertices[24] = {};

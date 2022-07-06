@@ -141,9 +141,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Deeptest.cpp" />
     <ClCompile Include="DirectXInit.cpp" />
     <ClCompile Include="KeyBoard.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Vector2.cpp" />
     <ClCompile Include="Vector3.cpp" />
     <ClCompile Include="Windows.cpp" />
@@ -163,9 +165,11 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Deeptest.h" />
     <ClInclude Include="DirectXInit.h" />
     <ClInclude Include="Global.h" />
     <ClInclude Include="KeyBoard.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="Vector2.h" />
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="Windows.h" />

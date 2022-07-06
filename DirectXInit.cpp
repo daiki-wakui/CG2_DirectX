@@ -18,6 +18,7 @@ using namespace DirectX;
 DirectXInit::DirectXInit() {
 }
 
+
 //DirectX初期化処理
 void DirectXInit::Init(HWND& hwnd) {
 #ifdef _DEBUG
@@ -143,46 +144,11 @@ void DirectXInit::Init(HWND& hwnd) {
 
 //描画初期化処理
 void DirectXInit::DrawingInit() {
-	//深度バッファリソース設定
-	D3D12_RESOURCE_DESC depthResourceDesc{};
-	depthResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	depthResourceDesc.Width = window_width;
-	depthResourceDesc.Height = window_height;
-	depthResourceDesc.DepthOrArraySize = 1;
-	depthResourceDesc.Format = DXGI_FORMAT_D32_FLOAT;
-	depthResourceDesc.SampleDesc.Count = 1;
-	depthResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-	//深度値用ヒーププロパティ
-	D3D12_HEAP_PROPERTIES deptHeapProp{};
-	deptHeapProp.Type = D3D12_HEAP_TYPE_DEFAULT;
-	//深度値のクリア値
-	D3D12_CLEAR_VALUE depthClearValue{};
-	depthClearValue.DepthStencil.Depth = 1.0f;
-	depthClearValue.Format = DXGI_FORMAT_D32_FLOAT;
 
-	//リソース生成
-	ID3D12Resource* depthBuff = nullptr;
-	result = device->CreateCommittedResource(
-		&deptHeapProp,
-		D3D12_HEAP_FLAG_NONE,
-		&depthResourceDesc,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
-		&depthClearValue,
-		IID_PPV_ARGS(&depthBuff));
-
-	//深度ビュー用デスクリプタヒープ生成
-	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
-	dsvHeapDesc.NumDescriptors = 1;
-	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	result = device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsvHeap));
-
-	//深度ビュー生成
-	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
-	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-	device->CreateDepthStencilView(
-		depthBuff,
-		&dsvDesc,
-		dsvHeap->GetCPUDescriptorHandleForHeapStart());
+	//深度設定
+	Depth.Setting();
+	//深度生成
+	Depth.Create(result, device);
 
 	//画像イメージデータ
 	TexMetadata metadata{};
@@ -760,14 +726,14 @@ void DirectXInit::DrawUpdate() {
 	// 2.描画先の変更
 	// レンダーターゲットビューのハンドルを取得
 	rtvHandle = rtvHeap->GetCPUDescriptorHandleForHeapStart();
-	dsvHandle = dsvHeap->GetCPUDescriptorHandleForHeapStart();
+	Depth.dsvHandle = Depth.dsvHeap->GetCPUDescriptorHandleForHeapStart();
 	rtvHandle.ptr += bbIndex * device->GetDescriptorHandleIncrementSize(rtvHeapDesc.Type);
-	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
+	commandList->OMSetRenderTargets(1, &rtvHandle, false, &Depth.dsvHandle);
 
 	// 3.画面クリア R G B A
 	FLOAT clearColor[] = { 0.1f,0.25f, 0.5f,0.0f }; // 青っぽい色
 	commandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	commandList->ClearDepthStencilView(Depth.dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// 4.描画コマンド　ここから
 	// 4.描画コマンド　ここまで
