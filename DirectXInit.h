@@ -8,6 +8,7 @@
 #include <vector>
 #include "KeyBoard.h"
 #include "Deeptest.h"
+#include "Texture.h"
 
 //数学ライブラリ
 #include <DirectXMath.h>
@@ -103,6 +104,8 @@ public:
 
 	//深度クラス
 	Deeptest Depth;
+
+	Texture texture[2];
 
 	ID3D12GraphicsCommandList* commandList = nullptr;
 

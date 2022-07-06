@@ -150,120 +150,21 @@ void DirectXInit::DrawingInit() {
 	//深度生成
 	Depth.Create(result, device);
 
-	//画像イメージデータ
-	TexMetadata metadata{};
-	ScratchImage scratchImg{};
-
-	result = LoadFromWICFile(
-		L"Resourse/gennbanoko.png",
-		WIC_FLAGS_NONE,
-		&metadata, scratchImg);
-
-	//画像二枚目
-	TexMetadata metadata2{};
-	ScratchImage scratchImg2{};
-
-	//テクスチャ読み込み
-	result = LoadFromWICFile(
-		L"Resourse/2.png",
-		WIC_FLAGS_NONE,
-		&metadata2, scratchImg2);
-
-	//
-	ScratchImage mipChain{};
-
-	result = GenerateMipMaps(
-		scratchImg.GetImages(), scratchImg.GetImageCount(), scratchImg.GetMetadata(),
-		TEX_FILTER_DEFAULT, 0, mipChain);
-	if (SUCCEEDED(result)) {
-		scratchImg = std::move(mipChain);
-		metadata = scratchImg.GetMetadata();
-	}
-
-	ScratchImage mipChain2{};
-	result = GenerateMipMaps(
-		scratchImg2.GetImages(), scratchImg2.GetImageCount(), scratchImg2.GetMetadata(),
-		TEX_FILTER_DEFAULT, 0, mipChain2);
-	if (SUCCEEDED(result)) {
-		scratchImg2 = std::move(mipChain2);
-		metadata2 = scratchImg2.GetMetadata();
-	}
-
-	metadata.format = MakeSRGB(metadata.format);
-	metadata2.format = MakeSRGB(metadata2.format);
-
-
-	//ヒープ設定
-	D3D12_HEAP_PROPERTIES textureHeapProp{};
-	textureHeapProp.Type = D3D12_HEAP_TYPE_CUSTOM;
-	textureHeapProp.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-	textureHeapProp.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
-
+	//画像読み込み
+	texture[0].Load(result, L"Resourse/gennbanoko.png");
+	texture[1].Load(result, L"Resourse/2.png");
+	//ミップマップ生成
+	texture[0].CreateMipmap(result);
+	texture[1].CreateMipmap(result);
 	//リソース設定
-	D3D12_RESOURCE_DESC textureResouseDesc{};
-	textureResouseDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	textureResouseDesc.Format = metadata.format;
-	textureResouseDesc.Width = metadata.width;
-	textureResouseDesc.Height = (UINT)metadata.height;
-	textureResouseDesc.DepthOrArraySize = (UINT16)metadata.arraySize;
-	textureResouseDesc.MipLevels = (UINT16)metadata.mipLevels;
-	textureResouseDesc.SampleDesc.Count = 1;
-
-	//リソース設定2
-	D3D12_RESOURCE_DESC textureResouseDesc2{};
-	textureResouseDesc2.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	textureResouseDesc2.Format = metadata2.format;
-	textureResouseDesc2.Width = metadata2.width;
-	textureResouseDesc2.Height = (UINT)metadata2.height;
-	textureResouseDesc2.DepthOrArraySize = (UINT16)metadata2.arraySize;
-	textureResouseDesc2.MipLevels = (UINT16)metadata2.mipLevels;
-	textureResouseDesc2.SampleDesc.Count = 1;
-
+	texture[0].ResourceSetting();
+	texture[1].ResourceSetting();
 	//テクスチャバッファ生成
-	ID3D12Resource* texBuff = nullptr;
-	result = device->CreateCommittedResource(
-		&textureHeapProp,
-		D3D12_HEAP_FLAG_NONE,
-		&textureResouseDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&texBuff));
-
-	//テクスチャバッファ生成2
-	ID3D12Resource* texBuff2 = nullptr;
-	result = device->CreateCommittedResource(
-		&textureHeapProp,
-		D3D12_HEAP_FLAG_NONE,
-		&textureResouseDesc2,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&texBuff2));
-
+	texture[0].CreateBaffer(result, device);
+	texture[1].CreateBaffer(result, device);
 	//テクスチャバッファにデータ転送
-	for (size_t i = 0; i < metadata.mipLevels; i++) {
-		const Image* img = scratchImg.GetImage(i, 0, 0);
-		result = texBuff->WriteToSubresource(
-			(UINT)i,
-			nullptr,
-			img->pixels,
-			(UINT)img->rowPitch,
-			(UINT)img->slicePitch
-		);
-		assert(SUCCEEDED(result));
-	}
-
-	//テクスチャバッファにデータ転送
-	for (size_t i = 0; i < metadata2.mipLevels; i++) {
-		const Image* img = scratchImg2.GetImage(i, 0, 0);
-		result = texBuff2->WriteToSubresource(
-			(UINT)i,
-			nullptr,
-			img->pixels,
-			(UINT)img->rowPitch,
-			(UINT)img->slicePitch
-		);
-		assert(SUCCEEDED(result));
-	}
+	texture[0].DetaTransfer(result);
+	texture[1].DetaTransfer(result);
 
 	//SRVの最大個数
 	const size_t kMaxSRVCount = 2056;
@@ -279,32 +180,23 @@ void DirectXInit::DrawingInit() {
 	assert(SUCCEEDED(result));
 
 	//シェーダリソースビュー設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = textureResouseDesc.Format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = textureResouseDesc.MipLevels;
+	texture[0].ShaderResourceViewSetting();
 
 	//SRVヒープの先頭ハンドルを取得
 	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = srvHeap->GetCPUDescriptorHandleForHeapStart();
 
 	//ハンドルの指す位置にシェーダリソースビュー生成
-	device->CreateShaderResourceView(texBuff, &srvDesc, srvHandle);
-
+	device->CreateShaderResourceView(texture[0].texBuff, &texture[0].srvDesc, srvHandle);
 
 	//一つハンドルを進める
 	UINT incrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	srvHandle.ptr += incrementSize;
 
 	//シェーダリソースビュー設定2
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
-	srvDesc2.Format = textureResouseDesc.Format;
-	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc2.Texture2D.MipLevels = textureResouseDesc.MipLevels;
+	texture[1].ShaderResourceViewSetting();
 
 	//ハンドルの指す位置にシェーダリソースビュー生成
-	device->CreateShaderResourceView(texBuff2, &srvDesc2, srvHandle);
+	device->CreateShaderResourceView(texture[1].texBuff, &texture[1].srvDesc, srvHandle);
 
 	//定数バッファ用データ構造体(マテリアル)
 	struct ConstBufferDataMaterial {
