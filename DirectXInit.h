@@ -110,7 +110,7 @@ public:
 	ID3D12GraphicsCommandList* commandList = nullptr;
 
 	//デバックレイヤーの有効化
-	ID3D12Debug* debugController;
+	ID3D12Debug1* debugController;
 
 	// ビューポート設定コマンド
 	D3D12_VIEWPORT viewport{};

@@ -25,6 +25,7 @@ void DirectXInit::Init(HWND& hwnd) {
 	//デバッグレイヤーをオンに
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
 		debugController->EnableDebugLayer();
+		debugController->SetEnableGPUBasedValidation(TRUE);
 	}
 #endif
 
@@ -151,20 +152,8 @@ void DirectXInit::DrawingInit() {
 	Depth.Create(result, device);
 
 	//画像読み込み
-	texture[0].Load(result, L"Resourse/gennbanoko.png");
-	texture[1].Load(result, L"Resourse/2.png");
-	//ミップマップ生成
-	texture[0].CreateMipmap(result);
-	texture[1].CreateMipmap(result);
-	//リソース設定
-	texture[0].ResourceSetting();
-	texture[1].ResourceSetting();
-	//テクスチャバッファ生成
-	texture[0].CreateBaffer(result, device);
-	texture[1].CreateBaffer(result, device);
-	//テクスチャバッファにデータ転送
-	texture[0].DetaTransfer(result);
-	texture[1].DetaTransfer(result);
+	texture[0].Load(result,device, L"Resourse/gennbanoko.png");
+	texture[1].Load(result,device, L"Resourse/2.png");
 
 	//SRVの最大個数
 	const size_t kMaxSRVCount = 2056;

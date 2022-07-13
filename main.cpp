@@ -34,7 +34,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	while (true) {
 
 		// ✖ボタンで終了メッセージが来たら
-		if (windows.gameloopExit(msg) == true) {
+		if (windows.gameloopExit(msg) == true || keyboard.keyInstantPush(DIK_ESCAPE)) {
 			break;	//終了
 		}
 

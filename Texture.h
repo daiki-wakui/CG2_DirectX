@@ -26,7 +26,7 @@ public:
 	ID3D12Resource* texBuff = nullptr;
 public:
 
-	void Load(HRESULT tResult,const wchar_t* image);
+	void Load(HRESULT tResult, ID3D12Device* tDevice,const wchar_t* image);
 	void CreateMipmap(HRESULT tResult);
 	void ResourceSetting();
 	void ShaderResourceViewSetting();

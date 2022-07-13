@@ -1,7 +1,7 @@
 #include "Texture.h"
 
 //画像読み込み
-void Texture::Load(HRESULT tResult, const wchar_t* image){
+void Texture::Load(HRESULT tResult, ID3D12Device* tDevice, const wchar_t* image){
 	result = tResult;
 
 	result = LoadFromWICFile(
@@ -11,6 +11,16 @@ void Texture::Load(HRESULT tResult, const wchar_t* image){
 
 	//詠み込んだディフューズテクスチャをSRGBとして扱う
 	metadata.format = MakeSRGB(metadata.format);
+
+	CreateMipmap(tResult);
+
+	ResourceSetting();
+
+	ShaderResourceViewSetting();
+
+	CreateBaffer(tResult, tDevice);
+
+	DetaTransfer(tResult);
 }
 
 //ミップマップ生成
