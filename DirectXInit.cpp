@@ -147,12 +147,6 @@ void DirectXInit::Init(HWND& hwnd) {
 //描画初期化処理
 void DirectXInit::DrawingInit() {
 
-	//乱数シード生成器
-	std::random_device seed_gen;
-	//メルセンヌ・ツイスターの乱数エンジン
-	std::mt19937_64 engine(seed_gen());
-	std::uniform_real_distribution<float> posDist(-10.0f, 10.0f);
-
 	//深度設定
 	Depth.Setting();
 	//深度生成
@@ -194,10 +188,10 @@ void DirectXInit::DrawingInit() {
 	//ハンドルの指す位置にシェーダリソースビュー生成
 	device->CreateShaderResourceView(texture[1].texBuff, &texture[1].srvDesc, srvHandle);
 
-	//定数バッファ用データ構造体(マテリアル)
-	struct ConstBufferDataMaterial {
-		XMFLOAT4 color;	//色(RGBA)
-	};
+	////定数バッファ用データ構造体(マテリアル)
+	//struct ConstBufferDataMaterial {
+	//	XMFLOAT4 color;	//色(RGBA)
+	//};
 
 	{
 		//ヒープ設定
@@ -238,14 +232,12 @@ void DirectXInit::DrawingInit() {
 	assert(SUCCEEDED(result));
 
 	//定数バッファのマッピング
-	ConstBufferDataMaterial* constMapMaterial = nullptr;
 	result = constBuffMaterial->Map(0, nullptr, (void**)&constMapMaterial);	//マッピング
 	assert(SUCCEEDED(result));
 
 	//値を書き込むと自動的に転送される
 	//ここで色変更
 	constMapMaterial->color = XMFLOAT4(1, 1, 1, 0.5f);
-
 
 	//頂点データ
 	Vertex vertices[] = {
@@ -305,32 +297,6 @@ void DirectXInit::DrawingInit() {
 	};
 
 	//法線を計算
-	for (int i = 0; i < 36 / 3; i++) {
-		//三角形のインデックスを取り出して、一時的な変数に入れる
-		unsigned short indices0 = indices[i * 3 + 0];
-		unsigned short indices1 = indices[i * 3 + 1];
-		unsigned short indices2 = indices[i * 3 + 2];
-
-		//三角形を構成する頂点座標をベクトルに代入
-		XMVECTOR p0 = XMLoadFloat3(&vertices[indices0].pos);
-		XMVECTOR p1 = XMLoadFloat3(&vertices[indices1].pos);
-		XMVECTOR p2 = XMLoadFloat3(&vertices[indices2].pos);
-
-		//p0→p1ベクトル、p0→p2ベクトルを計算(ベクトルの減算)
-		XMVECTOR v1 = XMVectorSubtract(p1, p0);
-		XMVECTOR v2 = XMVectorSubtract(p2, p0);
-
-		//外積は両方から垂直なベクトル(外積)
-		XMVECTOR normal = XMVector3Cross(v1, v2);
-
-		//正規化
-		normal = XMVector3Normalize(normal);
-
-		//求めた法線を頂点データに代入
-		XMStoreFloat3(&vertices[indices0].normal, normal);
-		XMStoreFloat3(&vertices[indices1].normal, normal);
-		XMStoreFloat3(&vertices[indices2].normal, normal);
-	}
 
 	// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
 	UINT sizeVB = static_cast<UINT>(sizeof(vertices[0]) * _countof(vertices));
@@ -489,29 +455,53 @@ void DirectXInit::DrawingInit() {
 	pipelineDesc.PS.pShaderBytecode = psBlob->GetBufferPointer();
 	pipelineDesc.PS.BytecodeLength = psBlob->GetBufferSize();
 
+	pipelineDesc2.VS.pShaderBytecode = vsBlob->GetBufferPointer();
+	pipelineDesc2.VS.BytecodeLength = vsBlob->GetBufferSize();
+	pipelineDesc2.PS.pShaderBytecode = psBlob->GetBufferPointer();
+	pipelineDesc2.PS.BytecodeLength = psBlob->GetBufferSize();
+
 	// サンプルマスクの設定
 	pipelineDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK; // 標準設定
 
+	pipelineDesc2.SampleMask = D3D12_DEFAULT_SAMPLE_MASK; // 標準設定
+
 	// ラスタライザの設定
 	pipelineDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK; // 背面をカリング
+	pipelineDesc2.RasterizerState.CullMode = D3D12_CULL_MODE_BACK; // 背面をカリング
+	
+
 	pipelineDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID; // ポリゴン内塗りつぶし
+	pipelineDesc2.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;	//ワイヤーフレーム
+
 	pipelineDesc.RasterizerState.DepthClipEnable = true; // 深度クリッピングを有効に
+	pipelineDesc2.RasterizerState.DepthClipEnable = true; // 深度クリッピングを有効に
 
 	// ブレンドステート
 	pipelineDesc.BlendState.RenderTarget[0].RenderTargetWriteMask
+		= D3D12_COLOR_WRITE_ENABLE_ALL; // RBGA全てのチャンネルを描画
+
+	pipelineDesc2.BlendState.RenderTarget[0].RenderTargetWriteMask
 		= D3D12_COLOR_WRITE_ENABLE_ALL; // RBGA全てのチャンネルを描画
 
 	// 頂点レイアウトの設定
 	pipelineDesc.InputLayout.pInputElementDescs = inputLayout;
 	pipelineDesc.InputLayout.NumElements = _countof(inputLayout);
 
+	pipelineDesc2.InputLayout.pInputElementDescs = inputLayout;
+	pipelineDesc2.InputLayout.NumElements = _countof(inputLayout);
+
 	// 図形の形状設定
 	pipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	pipelineDesc2.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 
 	// その他の設定
 	pipelineDesc.NumRenderTargets = 1; // 描画対象は1つ
 	pipelineDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 0~255指定のRGBA
 	pipelineDesc.SampleDesc.Count = 1; // 1ピクセルにつき1回サンプリング
+
+	pipelineDesc2.NumRenderTargets = 1; // 描画対象は1つ
+	pipelineDesc2.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 0~255指定のRGBA
+	pipelineDesc2.SampleDesc.Count = 1; // 1ピクセルにつき1回サンプリング
 
 	//デスクリプタレンジの設定
 	D3D12_DESCRIPTOR_RANGE descriptorRange{};
@@ -554,6 +544,11 @@ void DirectXInit::DrawingInit() {
 	pipelineDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;	//小さければ合格
 	pipelineDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;	//深度値フォーマット
 
+	pipelineDesc2.DepthStencilState.DepthEnable = true;	//深度テスト
+	pipelineDesc2.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;	//書き込み許可
+	pipelineDesc2.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;	//小さければ合格
+	pipelineDesc2.DSVFormat = DXGI_FORMAT_D32_FLOAT;	//深度値フォーマット
+
 
 	//ルートシグネクチャの設定
 	rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -572,6 +567,11 @@ void DirectXInit::DrawingInit() {
 	rootSigBlob->Release();
 	// パイプラインにルートシグネチャをセット
 	pipelineDesc.pRootSignature = rootSignature;
+	pipelineDesc2.pRootSignature = rootSignature;
+
+	// パイプランステートの生成
+	result = device->CreateGraphicsPipelineState(&pipelineDesc2, IID_PPV_ARGS(&pipelineState));
+	assert(SUCCEEDED(result));
 
 	// パイプランステートの生成
 	result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
@@ -602,7 +602,7 @@ void DirectXInit::Update(KeyBoard& key){
 }
 
 //毎フレーム処理
-void DirectXInit::DrawUpdate() {
+void DirectXInit::DrawUpdate(KeyBoard& key) {
 	// バックバッファの番号を取得(2つなので0番か1番)
 	UINT bbIndex = swapChain->GetCurrentBackBufferIndex();
 	// 1.リソースバリアで書き込み可能に変更
@@ -624,6 +624,136 @@ void DirectXInit::DrawUpdate() {
 	commandList->ClearDepthStencilView(Depth.dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// 4.描画コマンド　ここから
+	
+	// 頂点レイアウト
+	D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+		{	//x,y,z座標
+			"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0
+		},
+		{
+			//法線ベクトル
+			"NORMAL",0,DXGI_FORMAT_R32G32B32_FLOAT,0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0
+		},
+		{	//u,v座標
+			"TEXCOORD",0,DXGI_FORMAT_R32G32_FLOAT,0,
+			D3D12_APPEND_ALIGNED_ELEMENT,
+			D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,0
+		},
+	};
+
+	// シェーダーの設定
+	pipelineDesc.VS.pShaderBytecode = vsBlob->GetBufferPointer();
+	pipelineDesc.VS.BytecodeLength = vsBlob->GetBufferSize();
+	pipelineDesc.PS.pShaderBytecode = psBlob->GetBufferPointer();
+	pipelineDesc.PS.BytecodeLength = psBlob->GetBufferSize();
+
+	pipelineDesc2.VS.pShaderBytecode = vsBlob->GetBufferPointer();
+	pipelineDesc2.VS.BytecodeLength = vsBlob->GetBufferSize();
+	pipelineDesc2.PS.pShaderBytecode = psBlob->GetBufferPointer();
+	pipelineDesc2.PS.BytecodeLength = psBlob->GetBufferSize();
+
+	// サンプルマスクの設定
+	pipelineDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK; // 標準設定
+
+	pipelineDesc2.SampleMask = D3D12_DEFAULT_SAMPLE_MASK; // 標準設定
+
+	// ラスタライザの設定
+	pipelineDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK; // 背面をカリング
+	pipelineDesc2.RasterizerState.CullMode = D3D12_CULL_MODE_BACK; // 背面をカリング
+
+
+	pipelineDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID; // ポリゴン内塗りつぶし
+	pipelineDesc2.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;	//ワイヤーフレーム
+
+	pipelineDesc.RasterizerState.DepthClipEnable = true; // 深度クリッピングを有効に
+	pipelineDesc2.RasterizerState.DepthClipEnable = true; // 深度クリッピングを有効に
+
+	// ブレンドステート
+	pipelineDesc.BlendState.RenderTarget[0].RenderTargetWriteMask
+		= D3D12_COLOR_WRITE_ENABLE_ALL; // RBGA全てのチャンネルを描画
+
+	pipelineDesc2.BlendState.RenderTarget[0].RenderTargetWriteMask
+		= D3D12_COLOR_WRITE_ENABLE_ALL; // RBGA全てのチャンネルを描画
+
+	// 頂点レイアウトの設定
+	pipelineDesc.InputLayout.pInputElementDescs = inputLayout;
+	pipelineDesc.InputLayout.NumElements = _countof(inputLayout);
+
+	pipelineDesc2.InputLayout.pInputElementDescs = inputLayout;
+	pipelineDesc2.InputLayout.NumElements = _countof(inputLayout);
+
+	// 図形の形状設定
+	pipelineDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	pipelineDesc2.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+
+	// その他の設定
+	pipelineDesc.NumRenderTargets = 1; // 描画対象は1つ
+	pipelineDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 0~255指定のRGBA
+	pipelineDesc.SampleDesc.Count = 1; // 1ピクセルにつき1回サンプリング
+
+	pipelineDesc2.NumRenderTargets = 1; // 描画対象は1つ
+	pipelineDesc2.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 0~255指定のRGBA
+	pipelineDesc2.SampleDesc.Count = 1; // 1ピクセルにつき1回サンプリング
+
+	//デプスステンシルステートの設定
+	pipelineDesc.DepthStencilState.DepthEnable = true;	//深度テスト
+	pipelineDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;	//書き込み許可
+	pipelineDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;	//小さければ合格
+	pipelineDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;	//深度値フォーマット
+
+	pipelineDesc2.DepthStencilState.DepthEnable = true;	//深度テスト
+	pipelineDesc2.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;	//書き込み許可
+	pipelineDesc2.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;	//小さければ合格
+	pipelineDesc2.DSVFormat = DXGI_FORMAT_D32_FLOAT;	//深度値フォーマット
+
+	// パイプラインにルートシグネチャをセット
+	pipelineDesc.pRootSignature = rootSignature;
+	pipelineDesc2.pRootSignature = rootSignature;
+
+
+
+
+	//色変化
+	timer++;
+
+	if (timer >= 100) {
+		timer = 0;
+	}
+
+	if (timer <= 50) {
+		constMapMaterial->color.x -= 0.03f;
+		constMapMaterial->color.y += 0.03f;
+		constMapMaterial->color.z -= 0.03f;
+	}
+	else if (timer > 50) {
+		constMapMaterial->color.x += 0.03f;
+		constMapMaterial->color.y -= 0.03f;
+		constMapMaterial->color.z += 0.03f;
+	}
+	
+
+	if (key.keyInstantPush(DIK_SPACE)) { isColorMode = true; }
+
+	//ワイヤーフレーム表示切り替え
+	if (key.keyInstantPush(DIK_1)) {
+		if (isRistMode == 0) { isRistMode = true; }
+		else { isRistMode = false; }
+	}
+	// パイプランステートの生成
+	if (isRistMode == true) {
+		
+		result = device->CreateGraphicsPipelineState(&pipelineDesc2, IID_PPV_ARGS(&pipelineState));
+		assert(SUCCEEDED(result));
+	}
+	else {
+		result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
+		assert(SUCCEEDED(result));
+	}
+
 	// 4.描画コマンド　ここまで
 }
 
@@ -686,6 +816,7 @@ void DirectXInit::GraphicCommand(KeyBoard& key) {
 
 	// プリミティブ形状の設定コマンド
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
+	//commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_); // 三角形リスト
 
 	//インデックスバッファビューの設定コマンド
 	commandList->IASetIndexBuffer(&ibView);
@@ -703,25 +834,14 @@ void DirectXInit::GraphicCommand(KeyBoard& key) {
 	//commandList->SetGraphicsRootDescriptorTable(1, srvGpuHandle);
 	UINT incrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	if (key.keyInstantPush(DIK_SPACE)) {
-		if (isTex == 0) {
-			isTex = true;
-		}
-		else {
-			isTex = false;
-		}
-		
-		
+		if (isTex == 0) {isTex = true;}
+		else {	isTex = false;}
 	}
 
-	if (isTex == true) {
-		srvGpuHandle.ptr += incrementSize;
-	}
-	else {
-		srvGpuHandle = srvHeap->GetGPUDescriptorHandleForHeapStart();
-	}
+	if (isTex == true) {srvGpuHandle.ptr += incrementSize;}
+	else {srvGpuHandle = srvHeap->GetGPUDescriptorHandleForHeapStart();}
 	
 	commandList->SetGraphicsRootDescriptorTable(1, srvGpuHandle);
-
 
 	for (int i = 0; i < _countof(object3ds); i++) {
 		DrawObject3d(&object3ds[i], commandList, vbView, ibView, _countof(indices));
@@ -759,14 +879,21 @@ void DirectXInit::InitializeObject3d(Object3d* object, ID3D12Device* device)
 
 void DirectXInit::CallObject3dInit()
 {
+	//乱数シード生成器
+	std::random_device seed_gen;
+	//メルセンヌ・ツイスターの乱数エンジン
+	std::mt19937_64 engine(seed_gen());
+	std::uniform_real_distribution<float> posDist(-30.0f, 30.0f);
+	std::uniform_real_distribution<float> rotDist(0.0f, 30.0f);
+
 	for (int i = 0; i < _countof(object3ds); i++) {
 		InitializeObject3d(&object3ds[i], device);
 
 		if (i > 0) {
 			object3ds[i].parent = &object3ds[i - 1];
-			object3ds[i].scale = { 0.9f,0.9f,0.9f };
-			object3ds[i].rotation = { 0.0f,0.0f,XMConvertToRadians(30.0f) };
-			object3ds[i].position = { 0.0f,0.0f,-8.0f };
+			object3ds[i].scale = { 1.1f,1.1f,1.1f };
+			object3ds[i].rotation = { rotDist(engine),rotDist(engine),rotDist(engine)};
+			object3ds[i].position = { posDist(engine),posDist(engine),posDist(engine)};
 		}
 	}
 }

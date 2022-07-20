@@ -98,7 +98,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		
 
 
-		directX.DrawUpdate();
+		directX.DrawUpdate(keyboard);
 		keyboard.Update();
 
 		//グラフィックコマンド

@@ -145,7 +145,6 @@
     <ClCompile Include="DirectXInit.cpp" />
     <ClCompile Include="KeyBoard.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Matrix4.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Vector2.cpp" />
     <ClCompile Include="Vector3.cpp" />
@@ -170,7 +169,6 @@
     <ClInclude Include="DirectXInit.h" />
     <ClInclude Include="Global.h" />
     <ClInclude Include="KeyBoard.h" />
-    <ClInclude Include="Matrix4.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Vector2.h" />
     <ClInclude Include="Vector3.h" />

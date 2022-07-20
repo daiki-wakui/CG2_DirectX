@@ -62,8 +62,7 @@ private:
 	ID3DBlob* psBlob = nullptr; // ピクセルシェーダオブジェクト
 	ID3DBlob* errorBlob = nullptr; // エラーオブジェクト
 
-	// グラフィックスパイプライン設定
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineDesc{};
+	
 
 
 	// ルートシグネチャの設定
@@ -89,11 +88,17 @@ private:
 	//D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 
 public:
+	// グラフィックスパイプライン設定
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineDesc{};
 
-	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle;
+	// グラフィックスパイプライン設定
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineDesc2{};
 
 	// パイプランステートの生成
 	ID3D12PipelineState* pipelineState = nullptr;
+
+	D3D12_GPU_DESCRIPTOR_HANDLE srvGpuHandle;
+	
 	// ルートシグネチャ
 	ID3D12RootSignature* rootSignature;
 	// 頂点バッファビューの作成
@@ -181,15 +186,28 @@ public:
 
 	const size_t kOjectConst = 50;
 
-	Object3d object3ds[50];
+	Object3d object3ds[20];
 	
 	bool isTex = 0;
+	bool isColorMode = 0;
+	bool isFrameMode = 0;
+	int  isRistMode = 0;
+
+	int timer = 0;
+
+	//定数バッファ用データ構造体(マテリアル)
+	struct ConstBufferDataMaterial {
+		XMFLOAT4 color;	//色(RGBA)
+	};
+
+	//定数バッファのマッピング
+	ConstBufferDataMaterial* constMapMaterial = nullptr;
 
 	DirectXInit();
 	void Init(HWND& hwnd);
 	void DrawingInit();
 	void Update(KeyBoard &key);
-	void DrawUpdate();
+	void DrawUpdate(KeyBoard& key);
 	void ResourceBarrier();
 	void GraphicCommand(KeyBoard& key);
 	void InitializeObject3d(Object3d* object, ID3D12Device* device);
