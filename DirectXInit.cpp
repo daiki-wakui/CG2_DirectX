@@ -238,7 +238,7 @@ void DirectXInit::DrawingInit() {
 	//値を書き込むと自動的に転送される
 	//ここで色変更
 	constMapMaterial->color = XMFLOAT4(1, 1, 1, 0.5f);
-
+	
 	//頂点データ
 	Vertex vertices[] = {
 		//x		   y	   z	   u       v
@@ -295,8 +295,6 @@ void DirectXInit::DrawingInit() {
 		20,21,22,
 		22,21,23
 	};
-
-	//法線を計算
 
 	// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
 	UINT sizeVB = static_cast<UINT>(sizeof(vertices[0]) * _countof(vertices));
@@ -624,7 +622,36 @@ void DirectXInit::DrawUpdate(KeyBoard& key) {
 	commandList->ClearDepthStencilView(Depth.dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// 4.描画コマンド　ここから
-	
+	//色変化
+	timer++;
+	if (timer > 100) {
+		timer = 0;
+	}
+	if (timer < 50) {
+		constMapMaterial->color.x -= 0.03f;
+		constMapMaterial->color.y += 0.03f;
+		constMapMaterial->color.z -= 0.03f;
+	}
+	else if (timer > 50) {
+		constMapMaterial->color.x += 0.03f;
+		constMapMaterial->color.y -= 0.03f;
+		constMapMaterial->color.z += 0.03f;
+	}
+
+	//ブレンド変更
+	if (key.keyInstantPush(DIK_B)) {
+		isBlendMode++;
+		if (isBlendMode == 5) {
+			isBlendMode = 0;
+		}
+	}
+
+	//ワイヤーフレーム表示切り替え
+	if (key.keyInstantPush(DIK_1)) {
+		if (isRistMode == 0) { isRistMode = true; }
+		else { isRistMode = false; }
+	}
+
 	// 頂点レイアウト
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
 		{	//x,y,z座標
@@ -658,7 +685,6 @@ void DirectXInit::DrawUpdate(KeyBoard& key) {
 
 	// サンプルマスクの設定
 	pipelineDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK; // 標準設定
-
 	pipelineDesc2.SampleMask = D3D12_DEFAULT_SAMPLE_MASK; // 標準設定
 
 	// ラスタライザの設定
@@ -673,11 +699,52 @@ void DirectXInit::DrawUpdate(KeyBoard& key) {
 	pipelineDesc2.RasterizerState.DepthClipEnable = true; // 深度クリッピングを有効に
 
 	// ブレンドステート
-	pipelineDesc.BlendState.RenderTarget[0].RenderTargetWriteMask
-		= D3D12_COLOR_WRITE_ENABLE_ALL; // RBGA全てのチャンネルを描画
+	//pipelineDesc.BlendState.RenderTarget[0].RenderTargetWriteMask
+	//	= D3D12_COLOR_WRITE_ENABLE_ALL; // RBGA全てのチャンネルを描画
 
 	pipelineDesc2.BlendState.RenderTarget[0].RenderTargetWriteMask
 		= D3D12_COLOR_WRITE_ENABLE_ALL; // RBGA全てのチャンネルを描画
+
+	// ブレンドステート(ブレンド設定)
+	D3D12_RENDER_TARGET_BLEND_DESC& blenddesc = pipelineDesc.BlendState.RenderTarget[0];
+	blenddesc.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;// RBGA全てのチャンネルを描画
+
+	//共通設定(アルファ値)
+	blenddesc.BlendEnable = true;	//ブレンドを有効にする
+	blenddesc.BlendOpAlpha = D3D12_BLEND_OP_ADD;	//加算
+	blenddesc.SrcBlendAlpha = D3D12_BLEND_ONE;	//ソースの値を100%使う
+	blenddesc.DestBlendAlpha = D3D12_BLEND_ZERO;	//テストの値を0%使う
+
+	if (isBlendMode == 0) {
+		blenddesc.BlendEnable = false;	//ブレンドを有効にする
+	}
+
+	if (isBlendMode == 1) {
+		blenddesc.BlendOp = D3D12_BLEND_OP_ADD;	//加算
+		blenddesc.SrcBlend = D3D12_BLEND_SRC_ALPHA;	//ソースのアルファ値
+		blenddesc.DestBlend = D3D12_BLEND_INV_SRC_ALPHA;	//1.0f-ソースのアルファ値
+	}
+
+	//加算合成
+	if (isBlendMode == 2) {
+		blenddesc.BlendOp = D3D12_BLEND_OP_ADD;	//加算
+		blenddesc.SrcBlend = D3D12_BLEND_ONE;	//ソースの値を100%使う
+		blenddesc.DestBlend = D3D12_BLEND_ONE;	//テストの値を100%使う
+	}
+	
+	if (isBlendMode == 3) {
+		//減算合成
+		blenddesc.BlendOp = D3D12_BLEND_OP_REV_SUBTRACT;	//テストからソースを減算
+		blenddesc.SrcBlend = D3D12_BLEND_ONE;	//ソースの値を100%使う
+		blenddesc.DestBlend = D3D12_BLEND_ONE;	//テストの値を100%使う
+	}
+	
+	if (isBlendMode == 4) {
+		//色反転
+		blenddesc.BlendOp = D3D12_BLEND_OP_ADD;	//加算
+		blenddesc.SrcBlend = D3D12_BLEND_INV_DEST_COLOR;	//1.0f-デストカラーの値
+		blenddesc.DestBlend = D3D12_BLEND_ZERO;	//使わない
+	}
 
 	// 頂点レイアウトの設定
 	pipelineDesc.InputLayout.pInputElementDescs = inputLayout;
@@ -714,38 +781,9 @@ void DirectXInit::DrawUpdate(KeyBoard& key) {
 	pipelineDesc.pRootSignature = rootSignature;
 	pipelineDesc2.pRootSignature = rootSignature;
 
-
-
-
-	//色変化
-	timer++;
-
-	if (timer >= 100) {
-		timer = 0;
-	}
-
-	if (timer <= 50) {
-		constMapMaterial->color.x -= 0.03f;
-		constMapMaterial->color.y += 0.03f;
-		constMapMaterial->color.z -= 0.03f;
-	}
-	else if (timer > 50) {
-		constMapMaterial->color.x += 0.03f;
-		constMapMaterial->color.y -= 0.03f;
-		constMapMaterial->color.z += 0.03f;
-	}
-	
-
-	if (key.keyInstantPush(DIK_SPACE)) { isColorMode = true; }
-
-	//ワイヤーフレーム表示切り替え
-	if (key.keyInstantPush(DIK_1)) {
-		if (isRistMode == 0) { isRistMode = true; }
-		else { isRistMode = false; }
-	}
 	// パイプランステートの生成
 	if (isRistMode == true) {
-		
+
 		result = device->CreateGraphicsPipelineState(&pipelineDesc2, IID_PPV_ARGS(&pipelineState));
 		assert(SUCCEEDED(result));
 	}
@@ -753,7 +791,6 @@ void DirectXInit::DrawUpdate(KeyBoard& key) {
 		result = device->CreateGraphicsPipelineState(&pipelineDesc, IID_PPV_ARGS(&pipelineState));
 		assert(SUCCEEDED(result));
 	}
-
 	// 4.描画コマンド　ここまで
 }
 
@@ -815,8 +852,22 @@ void DirectXInit::GraphicCommand(KeyBoard& key) {
 	commandList->SetGraphicsRootSignature(rootSignature);
 
 	// プリミティブ形状の設定コマンド
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
-	//commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_); // 三角形リスト
+	if (key.keyInstantPush(DIK_2)) {
+		isTopologyMode++;
+		if (isTopologyMode == 3) {
+			isTopologyMode = 0;
+		}
+	}
+
+	if (isTopologyMode == 0) {
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 三角形リスト
+	}
+	else if (isTopologyMode == 1) {
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST); // 線リスト
+	}
+	else if (isTopologyMode == 2) {
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINESTRIP); // 線ストリップ
+	}
 
 	//インデックスバッファビューの設定コマンド
 	commandList->IASetIndexBuffer(&ibView);
@@ -883,16 +934,16 @@ void DirectXInit::CallObject3dInit()
 	std::random_device seed_gen;
 	//メルセンヌ・ツイスターの乱数エンジン
 	std::mt19937_64 engine(seed_gen());
-	std::uniform_real_distribution<float> posDist(-30.0f, 30.0f);
+	std::uniform_real_distribution<float> posDist(-40.0f, 40.0f);
 	std::uniform_real_distribution<float> rotDist(0.0f, 30.0f);
 
 	for (int i = 0; i < _countof(object3ds); i++) {
 		InitializeObject3d(&object3ds[i], device);
 
 		if (i > 0) {
-			object3ds[i].parent = &object3ds[i - 1];
-			object3ds[i].scale = { 1.1f,1.1f,1.1f };
-			object3ds[i].rotation = { rotDist(engine),rotDist(engine),rotDist(engine)};
+			object3ds[i].parent = &object3ds[0];
+			object3ds[i].scale = { 1.0f,1.0f,1.0f };
+			object3ds[i].rotation = {0.0f,0.0f,0.0f};
 			object3ds[i].position = { posDist(engine),posDist(engine),posDist(engine)};
 		}
 	}

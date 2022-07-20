@@ -63,7 +63,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				angle -= XMConvertToRadians(1.0f);
 			}
 
-			//Y軸まわりに回転
+			//X軸まわりに回転
 			directX.eye.y = -100 * sinf(angle);
 			directX.eye.z = -100 * cosf(angle);
 			directX.matView = XMMatrixLookAtLH(XMLoadFloat3(&directX.eye), XMLoadFloat3(&directX.target), XMLoadFloat3(&directX.up));
@@ -95,8 +95,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		if (keyboard.keyPush(DIK_DOWN)){ directX.object3ds[0].position.y -= 1.0f; }
 		if (keyboard.keyPush(DIK_RIGHT)){ directX.object3ds[0].position.x += 1.0f; }
 		if (keyboard.keyPush(DIK_LEFT)){ directX.object3ds[0].position.x -= 1.0f; }
-		
-
 
 		directX.DrawUpdate(keyboard);
 		keyboard.Update();

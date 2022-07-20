@@ -186,12 +186,14 @@ public:
 
 	const size_t kOjectConst = 50;
 
-	Object3d object3ds[20];
+	Object3d object3ds[40];
 	
 	bool isTex = 0;
-	bool isColorMode = 0;
 	bool isFrameMode = 0;
 	int  isRistMode = 0;
+	int  isBlendMode = 0;
+	int  isVertexMode = 0;
+	int  isTopologyMode = 0;
 
 	int timer = 0;
 
@@ -202,6 +204,8 @@ public:
 
 	//定数バッファのマッピング
 	ConstBufferDataMaterial* constMapMaterial = nullptr;
+
+	//std::vector<Vertex> vertices;
 
 	DirectXInit();
 	void Init(HWND& hwnd);
