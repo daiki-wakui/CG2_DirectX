@@ -3,6 +3,7 @@
 #include <dxgi1_6.h>
 #include <cassert>
 #include "Global.h"
+#include <random>
 
 
 //数学ライブラリ
@@ -145,6 +146,12 @@ void DirectXInit::Init(HWND& hwnd) {
 
 //描画初期化処理
 void DirectXInit::DrawingInit() {
+
+	//乱数シード生成器
+	std::random_device seed_gen;
+	//メルセンヌ・ツイスターの乱数エンジン
+	std::mt19937_64 engine(seed_gen());
+	std::uniform_real_distribution<float> posDist(-10.0f, 10.0f);
 
 	//深度設定
 	Depth.Setting();
