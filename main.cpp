@@ -19,10 +19,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//DirectX初期化処理ここから
 	float angle = 0.0f;
 
-	XMFLOAT3 scale = { 1.0f,1.0f,1.0f };
-	XMFLOAT3 rotation = { 0.0f,0.0f,0.0f };
-	XMFLOAT3 position = { 0.0f,0.0f,0.0f };
-
 	directX.Init(windows.hwnd);
 	KeyBoard keyboard(directX.result, windows.hwnd, windows.w);
 	//DirectX初期化処理ここまで
@@ -69,23 +65,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			directX.matView = XMMatrixLookAtLH(XMLoadFloat3(&directX.eye), XMLoadFloat3(&directX.target), XMLoadFloat3(&directX.up));
 		}
 
-
-		if (keyboard.keyPush(DIK_UP) || keyboard.keyPush(DIK_DOWN) || keyboard.keyPush(DIK_RIGHT) || keyboard.keyPush(DIK_LEFT)) {
-			if (keyboard.keyPush(DIK_UP)) {
-				position.z += 1.0f;
-			}
-			else if (keyboard.keyPush(DIK_DOWN)) {
-				position.z -= 1.0f;
-			}
-
-			if (keyboard.keyPush(DIK_RIGHT)) {
-				position.x += 1.0f;
-			}
-			else if (keyboard.keyPush(DIK_LEFT)) {
-				position.x -= 1.0f;
-			}
-		}
-
 		//ワールド変換行列
 		for (size_t i = 0; i < _countof(directX.object3ds); i++) {
 			directX.UpdateObject3d(&directX.object3ds[i], directX.matView, directX.matProjection);
@@ -95,6 +74,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		if (keyboard.keyPush(DIK_DOWN)){ directX.object3ds[0].position.y -= 1.0f; }
 		if (keyboard.keyPush(DIK_RIGHT)){ directX.object3ds[0].position.x += 1.0f; }
 		if (keyboard.keyPush(DIK_LEFT)){ directX.object3ds[0].position.x -= 1.0f; }
+		if (keyboard.keyPush(DIK_R)) {directX.object3ds[0].rotation.x += 0.05f;}
+		if (keyboard.keyPush(DIK_T)) {directX.object3ds[0].rotation.x -= 0.05f;}
+		if (keyboard.keyPush(DIK_Y)) { directX.object3ds[0].rotation.y += 0.05f; }
+		if (keyboard.keyPush(DIK_U)) { directX.object3ds[0].rotation.y -= 0.05f; }
+		if (keyboard.keyPush(DIK_I)) { directX.object3ds[0].rotation.z += 0.05f; }
+		if (keyboard.keyPush(DIK_O)) { directX.object3ds[0].rotation.z -= 0.05f; }
 
 		directX.DrawUpdate(keyboard);
 		keyboard.Update();

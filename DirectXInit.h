@@ -132,13 +132,12 @@ public:
 	//D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
 
 	//頂点データ
-	XMFLOAT3 vertices[24] = {};
 	uint16_t indices[36]={};
 
 	//std::vector <uint16_t> indices;
 
-	UINT sizeVB;
-	UINT sizeIB;
+	//UINT sizeVB;
+	
 
 	D3D12_INDEX_BUFFER_VIEW ibView{};
 
@@ -205,7 +204,12 @@ public:
 	//定数バッファのマッピング
 	ConstBufferDataMaterial* constMapMaterial = nullptr;
 
-	//std::vector<Vertex> vertices;
+	std::vector<Vertex> vertices;
+	std::vector<uint16_t> iIndices;
+	UINT sizeVB;
+	UINT sizeIB;
+
+	
 
 	DirectXInit();
 	void Init(HWND& hwnd);

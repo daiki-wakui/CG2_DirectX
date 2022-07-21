@@ -153,8 +153,8 @@ void DirectXInit::DrawingInit() {
 	Depth.Create(result, device);
 
 	//画像読み込み
-	texture[0].Load(result,device, L"Resourse/gennbanoko.png");
-	texture[1].Load(result,device, L"Resourse/2.png");
+	texture[0].Load(result, device, L"Resourse/gennbanoko.png");
+	texture[1].Load(result, device, L"Resourse/2.png");
 
 	//SRVの最大個数
 	const size_t kMaxSRVCount = 2056;
@@ -238,66 +238,72 @@ void DirectXInit::DrawingInit() {
 	//値を書き込むと自動的に転送される
 	//ここで色変更
 	constMapMaterial->color = XMFLOAT4(1, 1, 1, 0.5f);
-	
+
 	//頂点データ
-	Vertex vertices[] = {
-		//x		   y	   z	   u       v
-		//前
-		{{ -5.0f, -5.0f, -5.0f} ,{}, {0.0f , 1.0f}},	//左下
-		{{ -5.0f,  5.0f, -5.0f} ,{}, {0.0f , 0.0f}},	//左上
-		{{  5.0f, -5.0f, -5.0f} ,{}, {1.0f , 1.0f}},	//右下
-		{{  5.0f,  5.0f, -5.0f} ,{}, {1.0f , 0.0f}},	//右上
-		//後
-		{{  5.0f, -5.0f,  5.0f} ,{}, {1.0f , 1.0f}},	//右下
-		{{  5.0f,  5.0f,  5.0f} ,{}, {1.0f , 0.0f}},	//右上
-		{{ -5.0f, -5.0f,  5.0f} ,{}, {0.0f , 1.0f}},	//左下
-		{{ -5.0f,  5.0f,  5.0f} ,{}, {0.0f , 0.0f}},	//左上
-		//左
-		{{ -5.0f, -5.0f, -5.0f} ,{}, {0.0f , 1.0f}},	//左下
-		{{ -5.0f, -5.0f,  5.0f} ,{}, {0.0f , 0.0f}},	//左上
-		{{ -5.0f,  5.0f, -5.0f} ,{}, {1.0f , 1.0f}},	//右下
-		{{ -5.0f,  5.0f,  5.0f} ,{}, {1.0f , 0.0f}},	//右上
-		//右
-		{{  5.0f,  5.0f, -5.0f} ,{}, {1.0f , 1.0f}},	//右下
-		{{  5.0f,  5.0f,  5.0f} ,{}, {1.0f , 0.0f}},	//右上
-		{{  5.0f, -5.0f, -5.0f} ,{}, {0.0f , 1.0f}},	//左下
-		{{  5.0f, -5.0f,  5.0f} ,{}, {0.0f , 0.0f}},	//左上
-		//下
-		{{  5.0f, -5.0f, -5.0f} ,{}, {1.0f , 1.0f}},	//右下
-		{{  5.0f, -5.0f,  5.0f} ,{}, {1.0f , 0.0f}},	//右上
-		{{ -5.0f, -5.0f, -5.0f} ,{}, {0.0f , 1.0f}},	//左下
-		{{ -5.0f, -5.0f,  5.0f} ,{}, {0.0f , 0.0f}},	//左上
-		//上
-		{{ -5.0f,  5.0f, -5.0f} ,{}, {0.0f , 1.0f}},	//左下
-		{{ -5.0f,  5.0f,  5.0f} ,{}, {0.0f , 0.0f}},	//左上
-		{{  5.0f,  5.0f, -5.0f} ,{}, {1.0f , 1.0f}},	//右下
-		{{  5.0f,  5.0f,  5.0f} ,{}, {1.0f , 0.0f}},	//右上
-	};
+	//前
+	vertices.push_back({ { -5.0f, -5.0f, -5.0f} ,{}, {0.0f , 1.0f} });
+	vertices.push_back({ { -5.0f,  5.0f, -5.0f} ,{}, {0.0f , 0.0f} });
+	vertices.push_back({ {  5.0f, -5.0f, -5.0f} ,{}, {1.0f , 1.0f} });
+	vertices.push_back({ {  5.0f,  5.0f, -5.0f} ,{}, {1.0f , 0.0f} });
+	//後
+	vertices.push_back({ {  5.0f, -5.0f, 5.0f} ,{}, {0.0f , 1.0f} });
+	vertices.push_back({ {  5.0f,  5.0f, 5.0f} ,{}, {0.0f , 0.0f} });
+	vertices.push_back({ { -5.0f, -5.0f, 5.0f} ,{}, {1.0f , 1.0f} });
+	vertices.push_back({ { -5.0f,  5.0f, 5.0f} ,{}, {1.0f , 0.0f} });
+	//左
+	vertices.push_back({ { -5.0f, -5.0f, -5.0f} ,{}, {0.0f , 1.0f} });
+	vertices.push_back({ { -5.0f, -5.0f,  5.0f} ,{}, {0.0f , 0.0f} });
+	vertices.push_back({ { -5.0f,  5.0f, -5.0f} ,{}, {1.0f , 1.0f} });
+	vertices.push_back({ { -5.0f,  5.0f,  5.0f} ,{}, {1.0f , 0.0f} });
+	//右
+	vertices.push_back({ {  5.0f,  5.0f, -5.0f} ,{}, {0.0f , 1.0f} });
+	vertices.push_back({ {  5.0f,  5.0f,  5.0f} ,{}, {0.0f , 0.0f} });
+	vertices.push_back({ {  5.0f, -5.0f, -5.0f} ,{}, {1.0f , 1.0f} });
+	vertices.push_back({ {  5.0f, -5.0f,  5.0f} ,{}, {1.0f , 0.0f} });
+	//下
+	vertices.push_back({ {  5.0f, -5.0f, -5.0f} ,{}, {0.0f , 1.0f} });
+	vertices.push_back({ {  5.0f, -5.0f,  5.0f} ,{}, {0.0f , 0.0f} });
+	vertices.push_back({ { -5.0f, -5.0f, -5.0f} ,{}, {1.0f , 1.0f} });
+	vertices.push_back({ { -5.0f, -5.0f,  5.0f} ,{}, {1.0f , 0.0f} });
+	//上
+	vertices.push_back({ { -5.0f,  5.0f, -5.0f} ,{}, {0.0f , 1.0f} });
+	vertices.push_back({ { -5.0f,  5.0f,  5.0f} ,{}, {0.0f , 0.0f} });
+	vertices.push_back({ {  5.0f,  5.0f, -5.0f} ,{}, {1.0f , 1.0f} });
+	vertices.push_back({ {  5.0f,  5.0f,  5.0f} ,{}, {1.0f , 0.0f} });
+
+	for (int i = 0; i < 6; i++) {
+		iIndices.push_back(i * 4);
+		iIndices.push_back(i * 4 + 1);
+		iIndices.push_back(i * 4 + 2);
+		iIndices.push_back(i * 4 + 2);
+		iIndices.push_back(i * 4 + 1);
+		iIndices.push_back(i * 4 + 3);
+	}
 
 	//インデックスデータ
-	uint16_t indices[] = {
-		//前
-		0,1,2,
-		2,1,3,
-		//後
-		4,5,6,
-		6,5,7,
-		//左
-		8,9,10,
-		10,9,11,
-		//右
-		12,13,14,
-		14,13,15,
-		//下
-		16,17,18,
-		18,17,19,
-		//上
-		20,21,22,
-		22,21,23
-	};
+	//uint16_t indices[] = {
+	//	//前
+	//	0,1,2,
+	//	2,1,3,
+	//	//後
+	//	4,5,6,
+	//	6,5,7,
+	//	//左
+	//	8,9,10,
+	//	10,9,11,
+	//	//右
+	//	12,13,14,
+	//	14,13,15,
+	//	//下
+	//	16,17,18,
+	//	18,17,19,
+	//	//上
+	//	20,21,22,
+	//	22,21,23
+	//};
 
 	// 頂点データ全体のサイズ = 頂点データ一つ分のサイズ * 頂点データの要素数
-	UINT sizeVB = static_cast<UINT>(sizeof(vertices[0]) * _countof(vertices));
+	sizeVB = static_cast<UINT>(sizeof(vertices[0]) * vertices.size());
 
 	// 頂点バッファの設定
 	heapProp.Type = D3D12_HEAP_TYPE_UPLOAD; // GPUへの転送用
@@ -325,14 +331,15 @@ void DirectXInit::DrawingInit() {
 	result = vertBuff->Map(0, nullptr, (void**)&vertMap);
 	assert(SUCCEEDED(result));
 	// 全頂点に対して
-	for (int i = 0; i < _countof(vertices); i++) {
+	for (int i = 0; i < vertices.size(); i++) {
 		vertMap[i] = vertices[i]; // 座標をコピー
 	}
 	// 繋がりを解除
 	vertBuff->Unmap(0, nullptr);
 
 	// インデックスデータ全体のサイズ //
-	sizeIB = static_cast<UINT>(sizeof(uint16_t) * _countof(indices));
+	//sizeIB = static_cast<UINT>(sizeof(uint16_t) * _countof(indices));
+	sizeIB = static_cast<UINT>(sizeof(uint16_t) * iIndices.size());
 	//リソース設定
 	resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 	resDesc.Width = sizeIB; //インデックスに入る分のサイズ
@@ -357,8 +364,8 @@ void DirectXInit::DrawingInit() {
 	result = indexBuff->Map(0, nullptr, (void**)&indexMap);
 	assert(SUCCEEDED(result));
 	// 全インデックスに対して
-	for (int i = 0; i < _countof(indices); i++) {
-		indexMap[i] = indices[i]; // インデックスをコピー
+	for (int i = 0; i < iIndices.size(); i++) {
+		indexMap[i] = iIndices[i]; // インデックスをコピー
 	}
 	// マッピング解除
 	indexBuff->Unmap(0, nullptr);
@@ -652,6 +659,129 @@ void DirectXInit::DrawUpdate(KeyBoard& key) {
 		else { isRistMode = false; }
 	}
 
+	if (key.keyInstantPush(DIK_3)) {
+		if (isVertexMode == 0) {
+			isVertexMode = 1;
+		}
+		else {
+			isVertexMode = 0;
+		}
+	}
+	
+	if (isVertexMode == 0) {
+		vertices.clear();
+		vertices.push_back({ { -5.0f, -5.0f, -5.0f} ,{}, {0.0f , 1.0f} });
+		vertices.push_back({ { -5.0f,  5.0f, -5.0f} ,{}, {0.0f , 0.0f} });
+		vertices.push_back({ {  5.0f, -5.0f, -5.0f} ,{}, {1.0f , 1.0f} });
+
+		iIndices.clear();
+		iIndices.push_back(0);
+		iIndices.push_back(1);
+		iIndices.push_back(2);
+	}
+	else if (isVertexMode == 1) {
+		vertices.clear();
+		vertices.push_back({ { -5.0f, -5.0f, -5.0f} ,{}, {0.0f , 1.0f} });
+		vertices.push_back({ { -5.0f,  5.0f, -5.0f} ,{}, {0.0f , 0.0f} });
+		vertices.push_back({ {  5.0f, -5.0f, -5.0f} ,{}, {1.0f , 1.0f} });
+		vertices.push_back({ {  5.0f,  5.0f, -5.0f} ,{}, {1.0f , 0.0f} });
+		//後
+		vertices.push_back({ {  5.0f, -5.0f, 5.0f} ,{}, {0.0f , 1.0f} });
+		vertices.push_back({ {  5.0f,  5.0f, 5.0f} ,{}, {0.0f , 0.0f} });
+		vertices.push_back({ { -5.0f, -5.0f, 5.0f} ,{}, {1.0f , 1.0f} });
+		vertices.push_back({ { -5.0f,  5.0f, 5.0f} ,{}, {1.0f , 0.0f} });
+		//左
+		vertices.push_back({ { -5.0f, -5.0f, -5.0f} ,{}, {0.0f , 1.0f} });
+		vertices.push_back({ { -5.0f, -5.0f,  5.0f} ,{}, {0.0f , 0.0f} });
+		vertices.push_back({ { -5.0f,  5.0f, -5.0f} ,{}, {1.0f , 1.0f} });
+		vertices.push_back({ { -5.0f,  5.0f,  5.0f} ,{}, {1.0f , 0.0f} });
+		//右
+		vertices.push_back({ {  5.0f,  5.0f, -5.0f} ,{}, {0.0f , 1.0f} });
+		vertices.push_back({ {  5.0f,  5.0f,  5.0f} ,{}, {0.0f , 0.0f} });
+		vertices.push_back({ {  5.0f, -5.0f, -5.0f} ,{}, {1.0f , 1.0f} });
+		vertices.push_back({ {  5.0f, -5.0f,  5.0f} ,{}, {1.0f , 0.0f} });
+		//下
+		vertices.push_back({ {  5.0f, -5.0f, -5.0f} ,{}, {0.0f , 1.0f} });
+		vertices.push_back({ {  5.0f, -5.0f,  5.0f} ,{}, {0.0f , 0.0f} });
+		vertices.push_back({ { -5.0f, -5.0f, -5.0f} ,{}, {1.0f , 1.0f} });
+		vertices.push_back({ { -5.0f, -5.0f,  5.0f} ,{}, {1.0f , 0.0f} });
+		//上
+		vertices.push_back({ { -5.0f,  5.0f, -5.0f} ,{}, {0.0f , 1.0f} });
+		vertices.push_back({ { -5.0f,  5.0f,  5.0f} ,{}, {0.0f , 0.0f} });
+		vertices.push_back({ {  5.0f,  5.0f, -5.0f} ,{}, {1.0f , 1.0f} });
+		vertices.push_back({ {  5.0f,  5.0f,  5.0f} ,{}, {1.0f , 0.0f} });
+
+		iIndices.clear();
+		for (int i = 0; i < 6; i++) {
+			iIndices.push_back(i * 4);
+			iIndices.push_back(i * 4 + 1);
+			iIndices.push_back(i * 4 + 2);
+			iIndices.push_back(i * 4 + 2);
+			iIndices.push_back(i * 4 + 1);
+			iIndices.push_back(i * 4 + 3);
+		}
+	}
+
+	sizeVB = static_cast<UINT>(sizeof(vertices[0]) * vertices.size());
+
+	// 頂点バッファの生成 //
+	result = device->CreateCommittedResource(
+		&heapProp, // ヒープ設定
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc, // リソース設定
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&vertBuff));
+	assert(SUCCEEDED(result));
+
+	//頂点バッファのデータ転送 //
+	// GPU上のバッファに対応した仮想メモリ(メインメモリ上)を取得
+	result = vertBuff->Map(0, nullptr, (void**)&vertMap);
+	assert(SUCCEEDED(result));
+	// 全頂点に対して
+	for (int i = 0; i < vertices.size(); i++) {
+		vertMap[i] = vertices[i]; // 座標をコピー
+	}
+	// 繋がりを解除
+	vertBuff->Unmap(0, nullptr);
+
+	// 頂点バッファビューの作成 //
+	// GPU仮想アドレス
+	vbView.BufferLocation = vertBuff->GetGPUVirtualAddress();
+	// 頂点バッファのサイズ
+	vbView.SizeInBytes = sizeVB;
+	// 頂点1つ分のデータサイズ
+	vbView.StrideInBytes = sizeof(vertices[0]);
+
+	sizeIB = static_cast<UINT>(sizeof(uint16_t) * iIndices.size());
+
+	// インデックスバッファの生成 //
+	ID3D12Resource* indexBuff = nullptr;
+	result = device->CreateCommittedResource(
+		&heapProp, // ヒープ設定
+		D3D12_HEAP_FLAG_NONE,
+		&resDesc, // リソース設定
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&indexBuff));
+
+	//インデックスバッファをマッピング
+	uint16_t* indexMap = nullptr;
+	result = indexBuff->Map(0, nullptr, (void**)&indexMap);
+	assert(SUCCEEDED(result));
+	// 全インデックスに対して
+	for (int i = 0; i < iIndices.size(); i++) {
+		indexMap[i] = iIndices[i]; // インデックスをコピー
+	}
+	// マッピング解除
+	indexBuff->Unmap(0, nullptr);
+
+	//インデックスバッファビューの生成
+	ibView.BufferLocation = indexBuff->GetGPUVirtualAddress();
+	ibView.Format = DXGI_FORMAT_R16_UINT;
+	ibView.SizeInBytes = sizeIB;
+
+
 	// 頂点レイアウト
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
 		{	//x,y,z座標
@@ -895,7 +1025,7 @@ void DirectXInit::GraphicCommand(KeyBoard& key) {
 	commandList->SetGraphicsRootDescriptorTable(1, srvGpuHandle);
 
 	for (int i = 0; i < _countof(object3ds); i++) {
-		DrawObject3d(&object3ds[i], commandList, vbView, ibView, _countof(indices));
+		DrawObject3d(&object3ds[i], commandList, vbView, ibView, iIndices.size());
 	}
 
 }
